@@ -1,0 +1,189 @@
+{% extends "base_layout.html" %}
+{% block pageHeader %}
+                <div class="col"></div>
+                <div class="col text-center">
+                  <h1>Show List</h1>
+                </div>
+                <div class="col text-right mr-3">
+                  <button class="btn btn-primary" onclick="window.location.href='/addnew'"><strong>+</strong></button>
+                </div>
+{% endblock %}
+{% block pageBody %}
+<div id="delModal" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Confirm Delete</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            </div>
+            <div class="modal-body float-center text-center">
+                <p class="text-warning">Are you sure you want to delete</p>
+                <p class="text-warning" id="delModal-showName">showName</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">No</button>
+                <button id="delButton" data-sid="sid" type="button" class="btn btn-danger">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="editModal" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="editModal-title">showName</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            </div>
+            <div class="modal-body">
+<form id="update-show-form" method="post" action="/show/showid" role="form">
+  <fieldset>
+  <div class="form-group hide">
+    <input type="hidden" id="name" name="name" value=""/>
+  </div>
+  <div class="form-group">
+    <label for="path">Path</label>
+    <input type="text" class="form-control" id="path" name="path" value=""/>
+  </div>
+  <div class="form-group">
+    <label for="filename">File Name</label>
+    <input type="text" class="form-control" id="filename" name="filename" value=""/>
+  </div>
+  <div class="form-group">
+    <label for="season">Season</label>
+    <input type="number" min="1" class="form-control" id="season" name="season" value=""/>
+  </div>
+  <div class="form-group">
+    <label for="minepisode">First Episode</label>
+    <input type="number" min="1" class="form-control" id="minepisode" name="minepisode" value=""/>
+  </div>
+  <div class="form-group form-check">
+    <input type="checkbox" class="form-check-input" id="enabled" name="enabled" value=""/>
+    <label class="form-check-label" for="enabled">Enabled</label>
+  </div>
+  <button type="submit" class="btn btn-primary">Submit</button>
+  <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+ </fieldset>
+</form>
+            </div>
+        </div>
+    </div>
+</div>
+
+              {% if shows %}
+                {% for show in shows %}
+                  <div class="row mt-1">
+                    <div class="col">
+                    <button class="btn-block text-white {% if show.enabled %}bg-info{% else %}bg-dark{% endif %}"
+                      type="button" data-toggle="collapse" data-target="#collapse-{{show.name|e}}"
+                      "aria-expanded="false" aria-controls="collapse-{{show.name|e}}">
+                      {{ show.name|e }}
+                    </button>
+                    <div class="collapse" id="collapse-{{show.name|e}}">
+                      <div class="container text-white {% if show.enabled %}bg-info{% else %}bg-dark{% endif %}">
+                        <div class="row justify-conent-md-center align-items-end">
+                          <div class="col">
+                           <div class="row justify-conent-md-center">
+                            <div class="col-4">Filename:</div>
+                            <div class="col">{{show.filename|e}}</div>
+                            <div class="col"></div>
+                            <div class="w-100"></div>
+                            <div class="col-4">Path:</div>
+                            <div class="col">{{show.path|e}}</div>
+                            <div class="col"></div>
+                            <div class="w-100"></div>
+                            <div class="col-4">Season:</div>
+                            <div class="col">{{show.season|e}}</div>
+                            <div class="col"></div>
+                            <div class="w-100"></div>
+                            <div class="col-4">Minimum Episode:</div>
+                            <div class="col">{{show.minepisode|e}}</div>
+                            <div class="col"></div>
+                            <div class="w-100"></div>
+                            <div class="col-4">Enabled:</div>
+                            <div class="col">{% if show.enabled %}Yes{% else %}No{% endif %}</div>
+                           </div>
+                          </div>
+                          <div class="col-md-auto mb-1">
+                            <a class="btn btn-danger" role="button" href="#delModal" data-toggle="modal" 
+                             data-showName="{{show.name|e}}" data-showid="{{show.id}}">
+                             <span class="fa fa-remove" aria-hidden="true"></span>
+                            </a>
+                            <a class="btn btn-success" role="button" href="#editModal" data-toggle="modal" 
+                             data-showName="{{show.name|e}}" 
+                             data-showId="{{show.id|e}}"
+                             data-path="{{show.path|e}}"
+                             data-filename="{{show.filename|e}}"
+                             data-season="{{show.season|e}}"
+                             data-minepisode="{{show.minepisode|e}}"
+                             data-enabled="{{show.enabled|e}}"
+                            >
+                             <span class="fa fa-edit" aria-hidden="true"></span>
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              {% endif %}
+{% endblock %}
+{% block scripts %}
+<script type="text/javascript">
+$.urlParam = function (name) {
+    var results = new RegExp('[\?&]' + name + '=([^&#]*)')
+                      .exec(window.location.search);
+
+    return (results !== null) ? results[1] || 0 : false;
+}
+
+if($.urlParam('status')){
+  var status = $.urlParam('status')
+  var asset = $.urlParam('asset').split('+').join(' ')
+  var action = $.urlParam('action')
+
+  if(status == 'success'){
+     $('#globalAlert').text('Successful '+action+' for '+asset);
+  }else{
+     $('#globalAlert').text('Failed to '+action+' '+asset);
+  }
+  $('#globalAlert').show();
+  window.setTimeout(function () { 
+    $("#globalAlert").alert('close'); }, 4000);               
+}
+
+$('#delModal').on('show.bs.modal', function(e) {
+    var showName = $(e.relatedTarget).data('showname');
+    var sid = $(e.relatedTarget).data('showid');
+    $(e.currentTarget).find('p[id="delModal-showName"]').text(showName);
+    $(e.currentTarget).find('button[id="delButton"]').data('sid',sid);
+});
+
+$('#delButton').on('click', function(e) { 
+    var sid = $(e.currentTarget).data('sid')
+    $.ajax({ url: '/shows/'+sid, method: 'DELETE', }).done(function(data, textStatus, request) { 
+        window.location.href = data; 
+    }); 
+});
+
+$('#editModal').on('show.bs.modal', function(e) {
+    var showName = $(e.relatedTarget).data('showname');
+    var showId = $(e.relatedTarget).data('showid');
+    var path = $(e.relatedTarget).data('path');
+    var fileName = $(e.relatedTarget).data('filename');
+    var season = $(e.relatedTarget).data('season');
+    var minepisode = $(e.relatedTarget).data('minepisode');
+    var enabled = $(e.relatedTarget).data('enabled');
+    $(e.currentTarget).find('h4[id="editModal-title"]').text(showName);
+    $(e.currentTarget).find('form[id="update-show-form"]').prop('action','/shows/'+showId);
+    $(e.currentTarget).find('input[id="path"]').val(path);
+    $(e.currentTarget).find('input[id="filename"]').val(fileName);
+    $(e.currentTarget).find('input[id="season"]').val(season);
+    $(e.currentTarget).find('input[id="minepisode"]').val(minepisode);
+    if(enabled){
+      $(e.currentTarget).find('input[id="enabled"]').prop('checked', true);
+    }
+});
+</script>
+{% endblock %}

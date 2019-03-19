@@ -1,0 +1,98 @@
+{% extends "base_layout.html" %}
+{% block pageHeader %}
+                <div class="col text-center float-center">
+                  <h1>Add New Movie</h1>
+                </div>
+{% endblock %}
+{% block pageBody %}
+<div id="lookupModal" class="modal fade">
+    <div class="modal-dialog modal-lf">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">TMDB Results</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            </div>
+            <div class="modal-body float-left text-left" id="lookupModal-body">
+                <p>Searching for matches...</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-1">
+  <div class="col">
+    <form id="add-show-form" method="post" action="/movies" role="form" class="form-horizontal">
+      <fieldset>
+
+        <!-- Text input-->
+        <div class="form-group">
+          <label class="col control-label" for="name">Name</label>  
+          <div class="col">
+            <div class="row">
+              <div class="col-md-8">
+                <input id="movieNameInput" name="name" type="text" placeholder="Gone With the Wind" class="form-control input-md" required="">
+              </div>
+              <div class="col-md-4">
+                <a class="btn btn-primary" role="button" href="#lookupModal" data-toggle="modal" data-refField="movieNameInput">TMDB Lookup</a>
+              </div>
+            </div>
+            <span class="help-block">The movie name</span>  
+          </div>
+        </div>
+
+        <!-- Button (Double) -->
+        <div class="form-group">
+          <div class="col">
+            <button id="buttonSubmit" name="buttonSubmit" class="btn btn-success">Save</button>
+            <a href="/index.html" id="buttonCancel" name="buttonCancel" class="btn btn-danger">Cancel</a>
+          </div>
+        </div>
+      </fieldset>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="text/javascript">
+
+function selectMovie(movieName,inputField) {
+   $('#'+inputField).val(movieName);
+   $('#lookupModal').modal('toggle');
+}
+
+$('#lookupModal').on('show.bs.modal', function(e) {
+    var inputField = $(e.relatedTarget).data('reffield');
+    var movieName = $('#'+inputField).val()
+     
+    $.getJSON('/movies/search?name='+movieName, function(data) {
+        var rows = data.map(function(item){
+          var ret = '<div class="container-fluid"><div class="row"><div class="col-md-8">'
+           + '<button class="btn-block" type="button" data-toggle="collapse" data-target="#collapse-'+item.id+'">'
+           + item.seriesName + '</button><div class="collapse" id="collapse-'+item.id+'">'
+           + '<div class="container"><div class="col">';
+          if(item.banner){
+            ret = ret + '<div class="row"><div class="col"><img class="img-fluid" alt="Responseive image" src="https://thetvdb.com/banners/'+item.banner+'"/></div></div>'
+          }
+          ret = ret + '<div class="row"><div class="col">First Aired:</div><div class="col">'+item.firstAired+'</div></div>'
+           + '<div class="row"><div class="col">'+item.overview+'</div></div>'
+           + '</div></div></div>'
+           + '</div><div class="col">'
+           + '<button type="button" class="btn btn-success mt-1 mb-1" data-showName="'+item.seriesName+'" onclick="selectShow(\''+item.seriesName+'\',\''+inputField+'\');"><span class="fa fa-check" "aria-hidden="true"></span></button>'  
+           + '</div></div></div>';
+          return ret;
+        });
+
+        $('#lookupModal-body').empty();
+        if(rows.length){
+          $('#lookupModal-body').html('<div class="container">'+rows.join('')+'</div>');
+        }else{
+          $('#lookupModal-body').text('No results found. Maybe learn to spell?');
+        }
+    });
+});
+</script>
+{% endblock %}
+

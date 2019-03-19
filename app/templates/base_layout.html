@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Slurpee</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="static/css/bootstrap.css" rel="stylesheet" media="screen">
+        <link href="static/css/font-awesome.css" rel="stylesheet" media="screen">
+    </head>
+    <body>
+        <div id="globalAlert" class="alert alert-primary collapse" role="alert">
+          This is a primary alert—check it out!
+        </div>
+        <div class="container">
+            <div class="row justify-content-md-center">
+              {% block pageHeader %}{% endblock %}
+            </div>
+            <div class="container" id="show-data">
+              {% block pageBody %}{% endblock %}
+            </div>
+        </div>
+        <script src="static/js/jquery-3.3.1.js"></script>
+        <script src="static/js/bootstrap.js"></script>
+        {% block scripts %}{% endblock %}
+    </body>
+</html>
+
