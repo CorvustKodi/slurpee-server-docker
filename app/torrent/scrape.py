@@ -60,6 +60,7 @@ def scraper(settings, allshows):
                 print('Looking for %s' % targetName)
 
                 engine = None
+                bestResults = []
                 for SEARCHER in settings['SEARCHERS']:
                     try:
                         module_name = 'torrent.sites.'+SEARCHER
@@ -81,19 +82,23 @@ def scraper(settings, allshows):
                             continue
                         found = False
                         if dlTorrent is not None :
-                            for tfile in torrentFiles:
-                                hasMatch = parsing.fuzzyMatch(targetName,str(tfile))
-                                if hasMatch != None:
-                                    print('Found existing download: %s' % tfile)
-                                    found = True
-                                    break
-                            if not found:
-                                print('Adding torrent: %s' % dlTorrent['url'])
-                                tc.add_uri(dlTorrent['url'])
-                                break
+                            bestResults.append(dlTorrent)
                     except Exception as details:
                         print('An error occured: %s' % details)
                         traceback.print_exc()
+                if len(bestResults) > 0:
+                    bestResults = sorted(bestResults,key = lambda k: k['seeds'], reverse=True)
+                for dlTorrent in bestResults:
+                    for tfile in torrentFiles:
+                        hasMatch = parsing.fuzzyMatch(targetName,str(tfile))
+                        if hasMatch != None:
+                            print('Found existing download: %s' % tfile)
+                            found = True
+                            break
+                    if not found:
+                        print('Adding torrent: %s' % dlTorrent['url'])
+                        tc.add_uri(dlTorrent['url'])
+                        break
             except Exception as details:
                 print('An error occured: %s' % details)
                 traceback.print_exc()
