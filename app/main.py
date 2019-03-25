@@ -39,8 +39,13 @@ def listShows():
                request.form.get('name').replace(' ','.'),
                request.form.get('season'),
                1,
-               1
+               1,
+               request.form.get('tvdbid')
              )
+      if show.tvdbid:
+          tvdb = TVDBSearch(settings['TVDB_API_KEY'],'en-us')
+          show.airedSeasons = tvdb.getDetails(show.tvdbid)
+         
       shows = ShowDB(settings['SHOWS_DB_PATH'])
       shows.updateShow(show)
       return redirect(url_for('root',status='success',action='add',asset=show.name))
@@ -74,12 +79,6 @@ def singleShow(id):
     elif request.method == 'DELETE':
         shows.removeShow(id)
         return (url_for('root',status='success',action='delete',asset=show.name), 200)
-
-@app.route('/torrent/<int:id>')
-def torrentDone(id):
-    print('Call to /torrent/'+str(id))
-    open('/done-torrents/'+str(id),'x')
-    return make_response('{"success":1}', 200)
 
 @app.route('/shows/search')
 def tvdbSearch():

@@ -36,13 +36,16 @@
                 <input id="showNameInput" name="name" type="text" placeholder="Prison Break" class="form-control input-md" required="">
               </div>
               <div class="col-md-4">
-                <a class="btn btn-primary" role="button" href="#lookupModal" data-toggle="modal" data-refField="showNameInput">TVDB Lookup</a>
+                <a class="btn btn-primary" role="button" href="#lookupModal" data-toggle="modal" data-nameField="showNameInput" data-idField="showTVDBIDInput">TVDB Lookup</a>
               </div>
             </div>
             <span class="help-block">The show's name</span>  
           </div>
         </div>
 
+        <div class="form-group">
+          <input type="hidden" id="showTVDBIDInput" value="0" name="tvdbid"/>
+        </div>
         <!-- Text input-->
         <div class="form-group">
           <label class="col control-label" for="season">Season</label>  
@@ -67,13 +70,15 @@
 {% block scripts %}
 <script type="text/javascript">
 
-function selectShow(showName,inputField) {
+function selectShow(showName,tvdbid,inputField,idField) {
    $('#'+inputField).val(showName);
+   $('#'+idField).val(tvdbid);
    $('#lookupModal').modal('toggle');
 }
 
 $('#lookupModal').on('show.bs.modal', function(e) {
-    var inputField = $(e.relatedTarget).data('reffield');
+    var inputField = $(e.relatedTarget).data('namefield');
+    var idField = $(e.relatedTarget).data('idfield');
     var showName = $('#'+inputField).val()
      
     $.getJSON('/shows/search?name='+showName, function(data) {
@@ -89,7 +94,7 @@ $('#lookupModal').on('show.bs.modal', function(e) {
            + '<div class="row"><div class="col">'+item.overview+'</div></div>'
            + '</div></div></div>'
            + '</div><div class="col">'
-           + '<button type="button" class="btn btn-success mt-1 mb-1" data-showName="'+item.seriesName+'" onclick="selectShow(\''+item.seriesName+'\',\''+inputField+'\');"><span class="fa fa-check" "aria-hidden="true"></span></button>'  
+           + '<button type="button" class="btn btn-success mt-1 mb-1" data-showName="'+item.seriesName+'" onclick="selectShow(\''+item.seriesName+'\',\''+item.id+'\',\''+inputField+'\',\''+idField+'\');"><span class="fa fa-check" "aria-hidden="true"></span></button>'  
            + '</div></div></div>';
           return ret;
         });

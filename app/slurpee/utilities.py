@@ -149,6 +149,49 @@ class TVDBSearch(object):
            node['seriesName'] = node['seriesName'].replace('(','').replace(')','')
         return seriesNodes
 
+    def getDetails(self, showID):
+        seasons = {}        
+        search_url = self.tvdbApi + "/series/" + str(showID) + "/episodes/summary"
+        if self.jwtToken is None:
+            self.login()
+        if self.jwtToken is None:
+            print('Could not authenticate!')
+            return seasons
+   
+        headers = {'Authorization' : 'Bearer ' + self.jwtToken, \
+                   'Accept-Language' : self.lang, \
+                   'Accept' : 'application/json'}
+        tvdb = requests.get(search_url,headers=headers)
+        respJ = tvdb.json()
+        if 'data' not in respJ.keys() or 'airedSeasons' not in respJ['data'].keys():
+            return seasons
+        for season in respJ['data']['airedSeasons']:
+            seasonNumber = int(season)
+            seasons[seasonNumber] = []
+            search_url = self.tvdbApi + "/series/" + str(showID) + "/episodes/query?airedSeason=" + season
+            tvdb = requests.get(search_url,headers=headers)
+            seasonJ = tvdb.json()
+            # Check for paging of the results
+            if 'links' not in seasonJ.keys():
+                continue
+            curPage = int(seasonJ['links']['first'])
+            lastPage = int(seasonJ['links']['last'])
+            while curPage <= lastPage:
+                curPage = curPage + 1
+                if 'data' not in seasonJ.keys():
+                    continue
+                for episode in seasonJ['data']:
+                    num = episode['airedEpisodeNumber']
+                    date = episode['firstAired']
+                    id = episode['id']
+                    lastUpdated = episode['lastUpdated']
+                    seasons[seasonNumber].append({'number':num , 'id':id, 'date':date, 'lastUpdated':lastUpdated})
+                if curPage <= lastPage:
+                    search_url = self.tvdbApi + "/series/" + str(showID) + "/episodes/query?airedSeason="+season+"&page="+str(curPage)
+                    tvdb = requests.get(search_url,headers=headers)
+                    seasonJ = tvdb.json()
+        return seasons
+        
 def sendMail(settings,subject_text,body_text):
   try:
     if settings['SMTP_SECURE']:
