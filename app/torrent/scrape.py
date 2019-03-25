@@ -11,7 +11,7 @@ from slurpee.utilities import makeChownDirs
 import sys                                                                        
 import traceback
 import importlib
-from datetime import date, timedelta
+from datetime import date
 
 def lookForTarget(settings, targetName):
     print('Looking for %s' % targetName)
@@ -87,7 +87,7 @@ def scraper(settings, allshows):
                     for episode in sorted(show.airedSeasons[season], key = lambda k: k['number']):
                         if dlPerShow <= 0:
                             break
-                        e_date = datefromisoformat(episode['date'])
+                        e_date = date.fromisoformat(episode['date'])
                         td = date.today() - e_date
                         if td.days < 2:
                             # This episode is at least 2 days away from airing, don't try to download it yet.
