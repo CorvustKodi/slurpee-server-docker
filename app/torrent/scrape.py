@@ -11,6 +11,48 @@ from slurpee.utilities import makeChownDirs
 import sys                                                                        
 import traceback
 import importlib
+from datetime import date, timedelta
+
+def lookForTarget(settings, targetName):
+    print('Looking for %s' % targetName)
+
+    engine = None
+    bestResults = []
+    for SEARCHER in settings['SEARCHERS']:
+        try:
+            module_name = 'torrent.sites.'+SEARCHER
+            module = importlib.import_module(module_name)
+            class_ = getattr(module, 'Search')
+            print('Calling engine %s' % SEARCHER)
+            engine = class_()
+            results = engine.search(urllib.parse.quote(targetName),{'trusted_uploaders':settings['TRUSTEDONLY']})
+            sanitizedTarget = parsing.sanitizeString(targetName)
+            if len(results) == 0 and sanitizedTarget != targetName:
+                results = engine.search(urllib.parse.quote(sanitizedTarget),{'trusted_uploaders':settings['TRUSTEDONLY']})
+            if len(results) > 0:
+                for res in results:
+                    if parsing.fuzzyMatch(targetName,res):
+                        dlTorrent = res
+                        break;
+            else:
+                print('No results returned.')
+                continue
+            found = False
+            if dlTorrent is not None :
+                bestResults.append(dlTorrent)
+        except Exception as details:
+            print('An error occured: %s' % details)
+            traceback.print_exc()
+    if len(bestResults) > 0:
+        bestResults = sorted(bestResults,key = lambda k: k['seeds'], reverse=True)
+    return bestResults
+
+def matchInDir(dir_path,filename):
+    for f in os.listdir(dir_path): 
+        hasMatch = parsing.fuzzyMatch(filename,f)
+        if hasMatch != None:
+            return True
+    return False
 
 def scraper(settings, allshows):
     socket.setdefaulttimeout(15)
@@ -24,9 +66,57 @@ def scraper(settings, allshows):
             for file_key in files_dict[id_key].keys():
                 torrentFiles.append(files_dict[id_key][file_key]['name'].lower())
     for show in allshows.getShows():
-        if show.enabled:
+        if show.enabled and not show.enabled_override:
             print('Checking %s' % show.name)
             try:
+              if show.tvdbid and show.airedSeasons:
+                # This show has episode information, so we can go ahead and grab a bunch of episodes at once 
+                # And we don't have to look for episodes that don't exist
+                # show.season now becomes the minimum season we will search for
+                dlPerShow = 10                
+                for season in sorted(show.airedSeasons.keys():
+                    if dlPerShow <= 0:
+                        break
+                    if season < show.season:
+                        continue
+                    dir_path = os.path.join(show.path,'Season %d' % season)
+                    if not os.path.exists(show.path):
+                        makeChownDirs(show.path,settings['FILE_OWNER'])
+                    if not os.path.exists(dir_path):
+                        makeChownDirs(dir_path,settings['FILE_OWNER'])
+                    for episode in sorted(show.airedSeasons[season], key = lambda k: k['number']):
+                        if dlPerShow <= 0:
+                            break
+                        e_date = datefromisoformat(episode['date'])
+                        td = date.today() - e_date
+                        if td.days < 2:
+                            # This episode is at least 2 days away from airing, don't try to download it yet.
+                            continue
+                        if season < 10:
+                            season_str = '0' + str(season)
+                        else:
+                            season_str = str(season)
+                        if episode['number'] < 10:
+                            episode_str = '0' + str(episode['number'])
+                        else:
+                            episode_str = str(episode['number'])
+                        targetName = show.filename+'.s'+season_str+'e'+episode_str)
+                        if not matchInDir(dir_path,targetName):
+                            bestResults = lookForTarget(settings,targetName)
+                            if len(bestResults):
+                                dlTorrent = bestResults[0]:
+                                for tfile in torrentFiles:
+                                    hasMatch = parsing.fuzzyMatch(targetName,str(tfile))
+                                    if hasMatch != None:
+                                        print('Found existing download: %s' % tfile)
+                                        found = True
+                                        break
+                                if not found:
+                                    print('Adding torrent: %s' % dlTorrent['url'])
+                                    tc.add_uri(dlTorrent['url'])
+                                    dlPerShow = dlPerShow - 1
+                                    break
+              else:
                 dlTorrent = None
                 # Figure out what the next episode we need is - only download 1 episode per sweep.
                 dir_path = os.path.join(show.path,'Season %d' % show.season)
@@ -57,38 +147,9 @@ def scraper(settings, allshows):
                     episode_str = str(nextEpisode)
 
                 targetName = show.filename + '.s'+season_str+'e'+episode_str
-                print('Looking for %s' % targetName)
-
-                engine = None
-                bestResults = []
-                for SEARCHER in settings['SEARCHERS']:
-                    try:
-                        module_name = 'torrent.sites.'+SEARCHER
-                        module = importlib.import_module(module_name)
-                        class_ = getattr(module, 'Search')
-                        print('Calling engine %s' % SEARCHER)
-                        engine = class_()
-                        results = engine.search(urllib.parse.quote(targetName),{'trusted_uploaders':settings['TRUSTEDONLY']})
-                        sanitizedTarget = parsing.sanitizeString(targetName)
-                        if len(results) == 0 and sanitizedTarget != targetName:
-                            results = engine.search(urllib.parse.quote(sanitizedTarget),{'trusted_uploaders':settings['TRUSTEDONLY']})
-                        if len(results) > 0:
-                            for res in results:
-                                if parsing.fuzzyMatch(targetName,res):
-                                    dlTorrent = res
-                                    break;
-                        else:
-                            print('No results returned.')
-                            continue
-                        found = False
-                        if dlTorrent is not None :
-                            bestResults.append(dlTorrent)
-                    except Exception as details:
-                        print('An error occured: %s' % details)
-                        traceback.print_exc()
-                if len(bestResults) > 0:
-                    bestResults = sorted(bestResults,key = lambda k: k['seeds'], reverse=True)
-                for dlTorrent in bestResults:
+                bestResults = lookForTarget(settings,targetName)
+                if len(bestResults):
+                    dlTorrent = bestResults[0]:
                     for tfile in torrentFiles:
                         hasMatch = parsing.fuzzyMatch(targetName,str(tfile))
                         if hasMatch != None:

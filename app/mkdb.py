@@ -9,6 +9,9 @@ with sqlite3.connect(sys.argv[1]) as conn:
     conn.execute('ALTER TABLE shows ADD COLUMN tvdbid INTEGER')
   except:
     pass
-
+  try:
+    conn.execute('ALTER TABLE shows ADD COLUMN enabled_override INTEGER')
+  except:
+    pass
   conn.commit()
   print('Database created/updated')

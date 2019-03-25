@@ -40,7 +40,8 @@ def listShows():
                request.form.get('season'),
                1,
                1,
-               request.form.get('tvdbid')
+               request.form.get('tvdbid'),
+               0
              )
       if show.tvdbid:
           tvdb = TVDBSearch(settings['TVDB_API_KEY'],'en-us')
@@ -70,10 +71,10 @@ def singleShow(id):
             show.season = int(request.form.get('season'))
         if 'minepisode' in request.form and len(request.form.get('minepisode')) > 0:
             show.minepisode = int(request.form.get('minepisode'))
-        if 'enabled' in request.form:
-            show.enabled = 1
+        if 'enabled_override' in request.form:
+            show.enabled_override = 1
         else:
-            show.enabled = 0
+            show.enabled_override = 0
         shows.updateShow(show)
         return redirect(url_for('root',status='success',action='update',asset=show.name))
     elif request.method == 'DELETE':

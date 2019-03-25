@@ -2,7 +2,7 @@ import xml.dom.minidom
 import sqlite3
 
 class TVShow():
-    def __init__(self, id, name, path, filename, season, minepisode, enabled, tvdbid=0):
+    def __init__(self, id, name, path, filename, season, minepisode, enabled, tvdbid=0, enabled_override=0):
         if id is not None:
           self.id = int(id)
         else:
@@ -13,6 +13,10 @@ class TVShow():
         self.season = int(season)
         self.minepisode = int(minepisode)
         self.enabled = int(enabled)
+        if enabled_override:
+            self.enabled_override = 1
+        else:
+            self.enabled_override = 0
         if tvdbid:
             self.tvdbid = int(tvdbid)
         else:
@@ -35,6 +39,7 @@ class TVShow():
           'minepisode':self.season,
           'enabled':self.enabled,
           'tvdbid':self.tvdbid,
+          'enabled_override':self.enabled_override,
           'airedSeasons':self.airedSeasons
         }
 
@@ -87,11 +92,11 @@ class ShowDB():
             db = self._open()
             cur = db.cursor()
             if show.id is None:
-                cur.execute("INSERT INTO shows (name, path, filename, season, minepisode, enabled, tvdbid) values (?,?,?,?,?,?,?)",
-                  (show.name, show.path, show.filename, show.season, show.minepisode, show.enabled, show.tvdbid))
+                cur.execute("INSERT INTO shows (name, path, filename, season, minepisode, enabled, tvdbid, enabled_override) values (?,?,?,?,?,?,?,?)",
+                  (show.name, show.path, show.filename, show.season, show.minepisode, show.enabled, show.tvdbid, show.enabled_override))
             else:
-                cur.execute("UPDATE shows SET path=?, filename=?, season=?, minepisode=?, enabled=? tvdbid=? WHERE id=?",
-                  (show.path, show.filename, show.season, show.minepisode, show.enabled, show.tvdbid, show.id))
+                cur.execute("UPDATE shows SET path=?, filename=?, season=?, minepisode=?, enabled=? tvdbid=? enabled_override=? WHERE id=?",
+                  (show.path, show.filename, show.season, show.minepisode, show.enabled, show.tvdbid, show.enabled_override, show.id))
             for s in show.airedSeasons.keys():
                 for e in show.airedSeasons[s]:
                     cur.execute("INSERT OR REPLACE INTO tvdbepisodes (id, number, season, show_fk, lastUpdated, airedDate) values (?,?,?,?,?,?)",
@@ -114,7 +119,7 @@ class ShowDB():
                     s = e[4]
                     if not s in show.airedSeasons.keys():
                         show.airedSeasons[s] = []
-                    show.airedSeaons[s].append(e_dict)
+                    show.airedSeasons[s].append(e_dict)
             return show
         finally:
             self._close()

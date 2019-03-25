@@ -58,8 +58,8 @@
     <input type="number" min="1" class="form-control" id="minepisode" name="minepisode" value=""/>
   </div>
   <div class="form-group form-check">
-    <input type="checkbox" class="form-check-input" id="enabled" name="enabled" value=""/>
-    <label class="form-check-label" for="enabled">Enabled</label>
+    <input type="checkbox" class="form-check-input" id="disabled" name="enabled_override" value=""/>
+    <label class="form-check-label" for="disabled">Disabled</label>
   </div>
   <button type="submit" class="btn btn-primary">Submit</button>
   <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
@@ -100,8 +100,8 @@
                             <div class="col">{{show.minepisode|e}}</div>
                             <div class="col"></div>
                             <div class="w-100"></div>
-                            <div class="col-4">Enabled:</div>
-                            <div class="col">{% if show.enabled %}Yes{% else %}No{% endif %}</div>
+                            <div class="col-4">Disabled:</div>
+                            <div class="col">{% if show.enabled_override %}Yes{% else %}No{% endif %}</div>
                            </div>
                           </div>
                           <div class="col-md-auto mb-1">
@@ -116,7 +116,7 @@
                              data-filename="{{show.filename|e}}"
                              data-season="{{show.season|e}}"
                              data-minepisode="{{show.minepisode|e}}"
-                             data-enabled="{{show.enabled|e}}"
+                             data-disabled="{{show.enabled_override|e}}"
                             >
                              <span class="fa fa-edit" aria-hidden="true"></span>
                             </a>
@@ -174,15 +174,15 @@ $('#editModal').on('show.bs.modal', function(e) {
     var fileName = $(e.relatedTarget).data('filename');
     var season = $(e.relatedTarget).data('season');
     var minepisode = $(e.relatedTarget).data('minepisode');
-    var enabled = $(e.relatedTarget).data('enabled');
+    var disabled = $(e.relatedTarget).data('disabled');
     $(e.currentTarget).find('h4[id="editModal-title"]').text(showName);
     $(e.currentTarget).find('form[id="update-show-form"]').prop('action','/shows/'+showId);
     $(e.currentTarget).find('input[id="path"]').val(path);
     $(e.currentTarget).find('input[id="filename"]').val(fileName);
     $(e.currentTarget).find('input[id="season"]').val(season);
     $(e.currentTarget).find('input[id="minepisode"]').val(minepisode);
-    if(enabled){
-      $(e.currentTarget).find('input[id="enabled"]').prop('checked', true);
+    if(disabled){
+      $(e.currentTarget).find('input[id="disabled"]').prop('checked', true);
     }
 });
 </script>
