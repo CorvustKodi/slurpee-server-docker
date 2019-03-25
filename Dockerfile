@@ -25,3 +25,4 @@ RUN pip install -r /requirements.txt && rm /requirements.txt
 
 ENV LISTEN_PORT 8080
 
+HEALTHCHECK --start-period=10s CMD wget http://localhost:${LISTEN_PORT} -O /dev/null || exit 1
