@@ -1,7 +1,7 @@
 import sys
 from slurpee.utilities import settingsFromFile, settingsFromEnv, TVDBSearch
 from slurpee.dataTypes import ShowDB
-from datetime import date
+import datetime
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
@@ -17,10 +17,14 @@ if __name__ == '__main__':
         seasons = tvdb.getDetails(show.tvdbid)
         show.airedSeasons = seasons
         for s in seasons.keys():
+            # Ignore season 0, it's specials
+            if int(s) <= 0:
+                continue
             for e in seasons[s]:
-                if not lastAiredDate or lastAiredDate < date.fromisoformat(e['date']):
-                    lastAiredDate = date.fromisoformat(e['date'])
-        date.today() > lastAiredDate:
+                edate = datetime.datetime.strptime(e['date'],"%Y-%m-%d").date()
+                if not lastAiredDate or lastAiredDate < edate:
+                    lastAiredDate = edate
+        if datetime.date.today() > lastAiredDate:
             show.enabled = False
         else:
             show.enabled = True
