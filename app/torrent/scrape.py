@@ -46,13 +46,6 @@ def lookForTarget(settings, targetName):
         bestResults = sorted(bestResults,key = lambda k: k['seeds'], reverse=True)
     return bestResults
 
-def matchInDir(dir_path,filename):
-    for f in os.listdir(dir_path): 
-        hasMatch = parsing.fuzzyMatch(filename,f)
-        if hasMatch != None:
-            return True
-    return False
-
 def scraper(settings, allshows):
     socket.setdefaulttimeout(15)
     # Create the client connection to transmission
@@ -100,7 +93,7 @@ def scraper(settings, allshows):
                         else:
                             episode_str = str(episode['number'])
                         targetName = show.filename+'.s'+season_str+'e'+episode_str
-                        if not matchInDir(dir_path,targetName):
+                        if not parsing.hasEpisodeInDir(dir_path, int(season),int(episode['number'])):
                             bestResults = lookForTarget(settings,targetName)
                             if len(bestResults):
                                 dlTorrent = bestResults[0]

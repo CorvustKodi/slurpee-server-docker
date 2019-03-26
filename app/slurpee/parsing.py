@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import re
+import re,os
 
 CHARS_TO_REMOVE = ["\'"]
 
@@ -58,6 +58,12 @@ def getExtension(filename):
         ret = toks[len(toks)-1]
     return ret
 
+def hasEpisodeInDir(dir_path,season,episode):
+    for f in os.listdir(dir_path):
+        ep_info = parseEpisode(f)
+        if season == ep_info[0] and episode == ep_info[1]: 
+            return True
+    return False
 
 if __name__ == '__main__':
   import sys
