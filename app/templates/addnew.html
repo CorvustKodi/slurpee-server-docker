@@ -37,6 +37,7 @@
               </div>
               <div class="col-md-4">
                 <a class="btn btn-primary" role="button" href="#lookupModal" data-toggle="modal" data-nameField="showNameInput" data-idField="showTVDBIDInput">TVDB Lookup</a>
+                <button id="clearName" name="cleanName" class="btn btn-danger d-none" onclick="clearShow()">Clear</button>
               </div>
             </div>
             <span class="help-block">The show's name</span>  
@@ -58,7 +59,7 @@
         <!-- Button (Double) -->
         <div class="form-group">
           <div class="col">
-            <button id="buttonSubmit" name="buttonSubmit" class="btn btn-success">Save</button>
+            <button id="buttonSubmit" name="buttonSubmit" class="btn btn-success d-none">Save</button>
             <a href="/index.html" id="buttonCancel" name="buttonCancel" class="btn btn-danger">Cancel</a>
           </div>
         </div>
@@ -70,9 +71,18 @@
 {% block scripts %}
 <script type="text/javascript">
 
+function clearShow() {
+  $('#showNameInput').val('');
+  $('#buttonSubmit').addClass('d-none');
+  $('#showTVDBIDInput').val(0);
+  $('#clearName').addClass('d-none');
+}
+
 function selectShow(showName,tvdbid,inputField,idField) {
    $('#'+inputField).val(showName);
    $('#'+idField).val(tvdbid);
+   $('#buttonSubmit').removeClass('d-none');
+   $('#clearName').removeClass('d-none');
    $('#lookupModal').modal('toggle');
 }
 

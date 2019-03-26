@@ -74,13 +74,13 @@
                 {% for show in shows %}
                   <div class="row mt-1">
                     <div class="col">
-                    <button class="btn-block text-white {% if show.enabled %}bg-info{% else %}bg-dark{% endif %}"
+                    <button class="btn-block text-white {% if show.enabled_override %} bg-dark {% elif show.enabled %}bg-info{% else %}bg-secondary{% endif %}"
                       type="button" data-toggle="collapse" data-target="#collapse-{{show.name|e}}"
                       "aria-expanded="false" aria-controls="collapse-{{show.name|e}}">
                       {{ show.name|e }}
                     </button>
                     <div class="collapse" id="collapse-{{show.name|e}}">
-                      <div class="container text-white {% if show.enabled %}bg-info{% else %}bg-dark{% endif %}">
+                      <div class="container text-white {% if show.enabled_override %} bg-dark {% elif show.enabled %}bg-info{% else %}bg-secondary{% endif %}">
                         <div class="row justify-conent-md-center align-items-end">
                           <div class="col">
                            <div class="row justify-conent-md-center">
@@ -183,6 +183,8 @@ $('#editModal').on('show.bs.modal', function(e) {
     $(e.currentTarget).find('input[id="minepisode"]').val(minepisode);
     if(disabled){
       $(e.currentTarget).find('input[id="disabled"]').prop('checked', true);
+    }else{
+      $(e.currentTarget).find('input[id="disabled"]').prop('checked', false);
     }
 });
 </script>
