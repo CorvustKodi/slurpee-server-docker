@@ -15,7 +15,8 @@ COPY ./supervisord.ini /etc/supervisor.d/
 COPY ./execute /usr/bin/
 COPY ./search.sh /search.sh
 COPY ./done.sh /done.sh
-RUN chmod 700 /usr/bin/execute && chmod 700 /search.sh && chmod 700 /done.sh
+COPY ./update.sh /update.sh
+RUN chmod 700 /usr/bin/execute && chmod 700 /search.sh && chmod 700 /done.sh && chmod 700 /update.sh
 COPY crontab /opt/cron/crontabs/root
 
 COPY ./app /app
