@@ -78,7 +78,10 @@ function clearShow() {
   $('#clearName').addClass('d-none');
 }
 
-function selectShow(showName,tvdbid,inputField,idField) {
+function selectShow(id,inputField,idField) {
+   var btn = $('#successButton-'+id);
+   var showName = decodeURIComponent(btn.data('showname'));
+   var tvdbid = btn.data('showid');
    $('#'+inputField).val(showName);
    $('#'+idField).val(tvdbid);
    $('#buttonSubmit').removeClass('d-none');
@@ -104,7 +107,7 @@ $('#lookupModal').on('show.bs.modal', function(e) {
            + '<div class="row"><div class="col">'+item.overview+'</div></div>'
            + '</div></div></div>'
            + '</div><div class="col">'
-           + '<button type="button" class="btn btn-success mt-1 mb-1" data-showName="'+item.seriesName+'" onclick="selectShow(\''+item.seriesName+'\',\''+item.id+'\',\''+inputField+'\',\''+idField+'\');"><span class="fa fa-check" "aria-hidden="true"></span></button>'  
+           + '<button type="button" id="successButton-'+item.id+'" class="btn btn-success mt-1 mb-1" data-showname="'+encodeURIComponent(item.seriesName)+'" data-showid="'+item.id+'" onclick="selectShow(\''+item.id+'\',\''+inputField+'\',\''+idField+'\');"><span class="fa fa-check" "aria-hidden="true"></span></button>'  
            + '</div></div></div>';
           return ret;
         });
