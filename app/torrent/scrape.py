@@ -37,7 +37,6 @@ def lookForTarget(settings, targetName):
             else:
                 print('No results returned.')
                 continue
-            found = False
             if dlTorrent is not None :
                 bestResults.append(dlTorrent)
         except Exception as details:
@@ -74,7 +73,7 @@ def scraper(settings, allshows):
                 # And we don't have to look for episodes that don't exist
                 # show.season now becomes the minimum season we will search for
                 dlPerShow = 10                
-                for season in sorted(show.airedSeasons.keys():
+                for season in sorted(show.airedSeasons.keys()):
                     if dlPerShow <= 0:
                         break
                     if season < show.season:
@@ -100,11 +99,12 @@ def scraper(settings, allshows):
                             episode_str = '0' + str(episode['number'])
                         else:
                             episode_str = str(episode['number'])
-                        targetName = show.filename+'.s'+season_str+'e'+episode_str)
+                        targetName = show.filename+'.s'+season_str+'e'+episode_str
                         if not matchInDir(dir_path,targetName):
                             bestResults = lookForTarget(settings,targetName)
                             if len(bestResults):
-                                dlTorrent = bestResults[0]:
+                                dlTorrent = bestResults[0]
+                                found = False
                                 for tfile in torrentFiles:
                                     hasMatch = parsing.fuzzyMatch(targetName,str(tfile))
                                     if hasMatch != None:
@@ -149,7 +149,8 @@ def scraper(settings, allshows):
                 targetName = show.filename + '.s'+season_str+'e'+episode_str
                 bestResults = lookForTarget(settings,targetName)
                 if len(bestResults):
-                    dlTorrent = bestResults[0]:
+                    dlTorrent = bestResults[0]
+                    found = False
                     for tfile in torrentFiles:
                         hasMatch = parsing.fuzzyMatch(targetName,str(tfile))
                         if hasMatch != None:
