@@ -79,10 +79,14 @@ def scraper(settings, allshows):
                     for episode in sorted(show.airedSeasons[season], key = lambda k: k['number']):
                         if dlPerShow <= 0:
                             break
-                        e_date = datetime.datetime.strptime(episode['date'],"%Y-%m-%d").date()
-                        td = datetime.date.today() - e_date
-                        if td.days < 2:
-                            # This episode is at least 2 days away from airing, don't try to download it yet.
+                        try:
+                            e_date = datetime.datetime.strptime(episode['date'],"%Y-%m-%d").date()
+                            td = datetime.date.today() - e_date
+                            if td.days < 2:
+                                # This episode is at least 2 days away from airing, don't try to download it yet.
+                                continue
+                        except:
+                            # If the date isn't defined, skip it, it's likely way off in the future
                             continue
                         if season < 10:
                             season_str = '0' + str(season)
