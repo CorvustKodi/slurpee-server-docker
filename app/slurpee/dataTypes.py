@@ -95,7 +95,6 @@ class ShowDB():
                 cur.execute("INSERT INTO shows (name, path, filename, season, minepisode, enabled, tvdbid, enabled_override) values (?,?,?,?,?,?,?,?)",
                   (show.name, show.path, show.filename, show.season, show.minepisode, show.enabled, show.tvdbid, show.enabled_override))
             else:
-                print(show)
                 cur.execute("UPDATE shows SET name=?, path=?, filename=?, season=?, minepisode=?, enabled=?, tvdbid=?, enabled_override=? WHERE id=?",
                   (show.name, show.path, show.filename, show.season, show.minepisode, show.enabled, show.tvdbid, show.enabled_override, show.id))
             for s in show.airedSeasons.keys():
