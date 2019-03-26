@@ -38,8 +38,9 @@
             <div class="modal-body">
 <form id="update-show-form" method="post" action="/show/showid" role="form">
   <fieldset>
-  <div class="form-group hide">
-    <input type="hidden" id="name" name="name" value=""/>
+  <div class="form-group">
+    <label for="name">Show Name</label>
+    <input type="text" class="form-control" id="name" name="name" value=""/>
   </div>
   <div class="form-group">
     <label for="path">Path</label>
@@ -139,9 +140,9 @@ $.urlParam = function (name) {
 }
 
 if($.urlParam('status')){
-  var status = $.urlParam('status')
-  var asset = $.urlParam('asset').split('+').join(' ')
-  var action = $.urlParam('action')
+  var status = $.urlParam('status');
+  var asset = decodeURIComponent($.urlParam('asset')).split('+').join(' ');
+  var action = $.urlParam('action');
 
   if(status == 'success'){
      $('#globalAlert').text('Successful '+action+' for '+asset);
@@ -177,6 +178,7 @@ $('#editModal').on('show.bs.modal', function(e) {
     var disabled = $(e.relatedTarget).data('disabled');
     $(e.currentTarget).find('h4[id="editModal-title"]').text(showName);
     $(e.currentTarget).find('form[id="update-show-form"]').prop('action','/shows/'+showId);
+    $(e.currentTarget).find('input[id="name"]').val(showName);
     $(e.currentTarget).find('input[id="path"]').val(path);
     $(e.currentTarget).find('input[id="filename"]').val(fileName);
     $(e.currentTarget).find('input[id="season"]').val(season);
