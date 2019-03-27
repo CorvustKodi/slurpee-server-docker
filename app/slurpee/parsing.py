@@ -28,27 +28,33 @@ def fuzzyMatch(targetName, f):
     return None  
 
 def parseEpisode(filename):
-    # First try, look for the form sNNeMM
     season = 0
     episode = 0
+    # First try, look for the form sNNeMM
     match = re.search('s([0-9]+)[\W]?e([0-9]+)',str(filename).lower())
     if match:
         season = int(match.group(1))
         episode = int(match.group(2))
+    if not season and not episode:
         # Next look for NN*MM
-    else:
         match = re.search('([0-9]+)[a-z]([0-9]+)',str(filename).lower())
         if match:
-            # Next look for NNMM
             season = int(match.group(1))
             episode = int(match.group(2))
-        else:
-            match = re.search("[ .]([0-9]{3,4})[ .]",str(filename).lower())
-            if match:
-                season = int(match.group(1))/100
-                episode = int(match.group(1))%100                
-            else: # Next try season NN episode MM
-                match = re.search("season[ .]*([0-9]+)[ .]*episode[ ]*([0-9]+)",str(filename).lower())
+    if not season and not episode:
+            # Next look for NNMM
+        match = re.search("[ .]([0-9]{3,4})[ .]",str(filename).lower())
+        if match:
+            # The episode is going the be the last 2 digits, the season will be what's left
+            episode = int(match.group(1)[-2:])
+            season = int(match.group(1)[:-2])
+    if not season and not episode:
+        # Next try season NN episode MM
+        match = re.search("season[ .]*([0-9]+)[ .]*episode[ ]*([0-9]+)",str(filename).lower())
+        if match:
+            season = int(match.group(1))
+            episode = int(match.group(2))
+
     return season, episode
 
 def getExtension(filename):
