@@ -61,8 +61,7 @@ def processFiles(files, settings, allshows):
                 try:
                     print('Copying to default video directory: %s' % os.path.join(download_path,os.path.basename(tfile)))
                     shutil.copy(os.path.join(download_path,tfile), os.path.join(default_video_output_path,os.path.basename(tfile)))
-                    doChown(os.path.join(default_video_path,os.path.basename(tfile)),settings['FILE_OWNER'])
-
+                    doChown(os.path.join(default_video_output_path,os.path.basename(tfile)),settings['FILE_OWNER'])
                     if settings['MAIL_ENABLED']:
                         sendMail(settings,'New video downloaded','%s - new file in videos' % os.path.basename(tfile))
                 except:
