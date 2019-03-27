@@ -1,5 +1,5 @@
 from flask import Flask, request, make_response, jsonify, render_template, redirect, url_for
-from slurpee.utilities import settingsFromFile, settingsFromEnv, TVDBSearch
+from slurpee.utilities import settingsFromFile, settingsFromEnv, TVDBSearch, TMDBSearch
 from slurpee.dataTypes import ShowDB, TVShow
 import os
 from werkzeug.exceptions import BadRequest
@@ -42,6 +42,10 @@ def showMissing():
 def newShow():
     return render_template('addnew.html')
 
+@app.route('/addmovie')
+def newMovie():
+    return render_template('addmovie.html')
+
 @app.route('/shows', methods=['GET', 'POST'])
 def listShows():
     if request.method == 'POST':
@@ -68,6 +72,14 @@ def listShows():
     else:
       shows = ShowDB(settings['SHOWS_DB_PATH'])
       return make_response(jsonify(shows=[e.toDict() for e in shows.getShows() ]) , 200)
+
+@app.route('/movies', methods=['POST'])
+def postMovie():
+    print(request.form)
+    movie_name = request.form.get('name')
+    movie_tmdbid = request.form.get('tmdbid')
+    movie_year = request.form.get('release_date').split('-')[0]
+    return redirect(url_for('root', status='success', action='add',asset=movie_name))
 
 @app.route('/shows/<int:id>', methods=['GET', 'POST', 'DELETE'])
 def singleShow(id):
@@ -104,6 +116,15 @@ def tvdbSearch():
     name = request.args.get('name')
     tvdb = TVDBSearch(settings['TVDB_API_KEY'],'en-us')
     return make_response(jsonify(tvdb.search(name)), 200)
+
+@app.route('/movies/search')
+def tmdbSearch():
+    if not 'name' in request.args:
+        return BadRequest('name not provided')
+
+    name = request.args.get('name')
+    tmdb = TMDBSearch(settings['THEMOVIEDB_API_KEY'])
+    return make_response(jsonify(tmdb.search(name)),200)
     
 if __name__ == "__main__":
     app.run()

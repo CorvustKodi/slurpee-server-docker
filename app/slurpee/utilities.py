@@ -1,4 +1,4 @@
-import requests
+import requests,urllib
 import json
 import os,shutil
 from xml.dom.minidom import parse
@@ -11,7 +11,8 @@ baseSettings = {'RPC_HOST':'127.0.0.1', 'RPC_PORT':2580, 'RPC_USER':'',
     'RPC_PASS':'', 'TRUSTEDONLY':False, 'SEARCHERS':[], 'SHOWS_DB_PATH':'',
     'MAIL_ENABLED':False, 'MAIL_DEST':'', 'SMTP_HOST':'', 'SMTP_PORT':25,
     'SMTP_SECURE':False, 'SMTP_USER':'', 'SMTP_PASS':'', 'DEFAULT_NEW_PATH':'',
-    'DEFAULT_BASE_PATH':'', 'DOWNLOADS_PATH':'', 'FILE_OWNER':'', 'TVDB_API_KEY':''
+    'DEFAULT_BASE_PATH':'', 'DOWNLOADS_PATH':'', 'FILE_OWNER':'', 'TVDB_API_KEY':'',
+    'THEMOVIEDB_API_KEY':''
 }
 
 def settingsFromEnv():
@@ -49,6 +50,7 @@ def settingsFromEnv():
     ret['DOWNLOADS_PATH'] = os.environ.get('DOWNLOADS_PATH',ret['DOWNLOADS_PATH'])
     ret['FILE_OWNER'] = os.environ.get('FILE_OWNER',ret['FILE_OWNER'])
     ret['TVDB_API_KEY'] = os.environ.get('TVDB_API_KEY',ret['TVDB_API_KEY'])
+    ret['THEMOVIEDB_API_KEY'] = os.environ.get('THEMOVIEDB_API_KEY',ret['THEMOVIEDB_API_KEY'])
     return ret
 
 def settingsFromFile(settings_file):
@@ -106,10 +108,46 @@ def settingsFromFile(settings_file):
 
             if node.attributes['id'].value == 'tvdb_api_key':
                 ret['TVDB_API_KEY'] = node.attributes['value'].value
+            if node.attributes['id'].value == 'themoviedb_api_key':
+                ret['THEMOVIEDB_API_KEY'] = node.attributes['value'].value
 
     except:
         pass
     return ret
+
+def sendMail(settings,subject_text,body_text):
+  try:
+    if settings['SMTP_SECURE']:
+        server = smtplib.SMTP_SSL(settings['SMTP_HOST'], settings['SMTP_PORT'])
+    else:
+        server = smtplib.SMTP(settings['SMTP_HOST'], settings['SMTP_PORT'])
+    server.login(settings['SMTP_USER'],settings['SMTP_PASS'])
+
+    msg = EmailMessage()
+    msg.set_content(body_text)
+    msg['Subject'] = subject_text
+    msg['From'] = "Slurpee"
+    msg['To'] = settings['MAIL_DEST']
+
+    server.send_message(msg)
+    server.quit()
+  except:
+    exc_details = traceback.format_exc()
+    print('%s' % exc_details)
+
+def doChown(path, owner):
+   toks = owner.split(':')
+   shutil.chown(path,toks[0],toks[1])
+
+def makeChownDirs(path, owner):
+    if not path or os.path.exists(path):
+        return []
+    (head, tail) = os.path.split(path)
+    res = makeChownDirs(head, owner)
+    os.mkdir(path)
+    doChown(path, owner)
+    res += [path]
+    return res
 
 class TVDBSearch(object):
     
@@ -130,7 +168,7 @@ class TVDBSearch(object):
         
     def search(self, showTitle):
         
-        search_url = self.tvdbApi + "/search/series?name=" + showTitle.replace(' ','+')
+        search_url = self.tvdbApi + "/search/series?name=" + urllib.parse.quote(showTitle)
         if self.jwtToken is None:
             self.login()
         if self.jwtToken is None:
@@ -192,38 +230,26 @@ class TVDBSearch(object):
                     seasonJ = tvdb.json()
         return seasons
         
-def sendMail(settings,subject_text,body_text):
-  try:
-    if settings['SMTP_SECURE']:
-        server = smtplib.SMTP_SSL(settings['SMTP_HOST'], settings['SMTP_PORT'])
-    else:
-        server = smtplib.SMTP(settings['SMTP_HOST'], settings['SMTP_PORT'])
-    server.login(settings['SMTP_USER'],settings['SMTP_PASS'])
+class TMDBSearch(object):
+    
+    def search(self,title):
+        request_url = self.baseURL + '/search/movie/' + '?api_key=' + self.apiKey + '&language=' + self.lang \
+            + '&include_adult=false&page=1' + '&query=' + urllib.parse.quote(title)
 
-    msg = EmailMessage()
-    msg.set_content(body_text)
-    msg['Subject'] = subject_text
-    msg['From'] = "Slurpee"
-    msg['To'] = settings['MAIL_DEST']
-
-    server.send_message(msg)
-    server.quit()
-  except:
-    exc_details = traceback.format_exc()
-    print('%s' % exc_details)
-
-def doChown(path, owner):
-   toks = owner.split(':')
-   shutil.chown(path,toks[0],toks[1])
-
-def makeChownDirs(path, owner):
-    if not path or os.path.exists(path):
-        return []
-    (head, tail) = os.path.split(path)
-    res = makeChownDirs(head, owner)
-    os.mkdir(path)
-    doChown(path, owner)
-    res += [path]
-    return res
-
-
+        resp = requests.get(request_url)
+        if not resp.ok:
+            print('Failed request to TheMovieDB: '+str(resp.status_code))
+            resp.raise_for_status()
+        respJ = resp.json()
+        results = []
+        if 'results' in respJ.keys():
+            results = respJ['results']
+        # Useful keys in results: 'title', 'release_date', 'overview', 'poster_path'
+        return results
+    
+    def __init__(self, apiKey, language='en-US'):
+        self.lang = language
+        self.baseURL = 'https://api.themoviedb.org/3'
+        self.apiKey = apiKey
+        self.basePosterPath='http://image.tmdb.org/t/p/w185'
+ 

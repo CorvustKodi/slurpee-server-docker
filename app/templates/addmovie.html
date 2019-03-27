@@ -1,7 +1,7 @@
 {% extends "base_layout.html" %}
 {% block pageHeader %}
                 <div class="col text-center float-center">
-                  <h1>Add New Movie</h1>
+                  <h1>Add a Movie</h1>
                 </div>
 {% endblock %}
 {% block pageBody %}
@@ -24,29 +24,36 @@
 
 <div class="row mt-1">
   <div class="col">
-    <form id="add-show-form" method="post" action="/movies" role="form" class="form-horizontal">
+    <form id="add-movie-form" method="post" action="/movies" role="form" class="form-horizontal">
       <fieldset>
 
         <!-- Text input-->
         <div class="form-group">
-          <label class="col control-label" for="name">Name</label>  
+          <label class="col control-label" for="name">Movie Name</label>  
           <div class="col">
             <div class="row">
               <div class="col-md-8">
                 <input id="movieNameInput" name="name" type="text" placeholder="Gone With the Wind" class="form-control input-md" required="">
               </div>
               <div class="col-md-4">
-                <a class="btn btn-primary" role="button" href="#lookupModal" data-toggle="modal" data-refField="movieNameInput">TMDB Lookup</a>
+                <a class="btn btn-primary" role="button" href="#lookupModal" data-toggle="modal" data-nameField="movieNameInput" data-idField="tmdbIDInput" data-dateField="releaseDateInput">TMDB Lookup</a>
+                <button id="clearName" name="cleanName" class="btn btn-danger d-none" onclick="clearMovie()">Clear</button>
               </div>
             </div>
-            <span class="help-block">The movie name</span>  
+            <span class="help-block">The movie's name</span>  
           </div>
         </div>
 
+        <div class="form-group">
+          <input type="hidden" id="tmdbIDInput" value="0" name="tmdbid"/>
+        </div>
+        <div class="form-group">
+          <input type="hidden" id="releaseDateInput" value="" name="release_date"/>
+        </div>
         <!-- Button (Double) -->
         <div class="form-group">
           <div class="col">
-            <button id="buttonSubmit" name="buttonSubmit" class="btn btn-success">Save</button>
+            <button id="buttonSubmit" name="buttonSubmit" class="btn btn-success d-none">Save</button>
             <a href="/index.html" id="buttonCancel" name="buttonCancel" class="btn btn-danger">Cancel</a>
           </div>
         </div>
@@ -58,29 +65,47 @@
 {% block scripts %}
 <script type="text/javascript">
 
-function selectMovie(movieName,inputField) {
+function clearMovie() {
+  $('#movieNameInput').val('');
+  $('#buttonSubmit').addClass('d-none');
+  $('#tmdbIDInput').val(0);
+  $('#releaseDateInput').val('');
+  $('#clearName').addClass('d-none');
+}
+
+function selectMovie(id,inputField,idField,dateField) {
+   var btn = $('#successButton-'+id);
+   var movieName = decodeURIComponent(btn.data('moviename'));
+   var tmdbid = btn.data('tmdbid');
+   var releaseDate = btn.data('releasedate');
    $('#'+inputField).val(movieName);
+   $('#'+idField).val(tmdbid);
+   $('#'+dateField).val(releaseDate);
+   $('#buttonSubmit').removeClass('d-none');
+   $('#clearName').removeClass('d-none');
    $('#lookupModal').modal('toggle');
 }
 
 $('#lookupModal').on('show.bs.modal', function(e) {
-    var inputField = $(e.relatedTarget).data('reffield');
+    var inputField = $(e.relatedTarget).data('namefield');
+    var idField = $(e.relatedTarget).data('idfield');
+    var dateField = $(e.relatedTarget).data('datefield');
     var movieName = $('#'+inputField).val()
      
     $.getJSON('/movies/search?name='+movieName, function(data) {
         var rows = data.map(function(item){
           var ret = '<div class="container-fluid"><div class="row"><div class="col-md-8">'
            + '<button class="btn-block" type="button" data-toggle="collapse" data-target="#collapse-'+item.id+'">'
-           + item.seriesName + '</button><div class="collapse" id="collapse-'+item.id+'">'
+           + item.title + '</button><div class="collapse" id="collapse-'+item.id+'">'
            + '<div class="container"><div class="col">';
-          if(item.banner){
-            ret = ret + '<div class="row"><div class="col"><img class="img-fluid" alt="Responseive image" src="https://thetvdb.com/banners/'+item.banner+'"/></div></div>'
+          if(item.poster_path){
+            ret = ret + '<div class="row"><div class="col"><img class="img-fluid" alt="Responseive image" src="http://image.tmdb.org/t/p/w185'+item.poster_path+'"/></div></div>'
           }
-          ret = ret + '<div class="row"><div class="col">First Aired:</div><div class="col">'+item.firstAired+'</div></div>'
+          ret = ret + '<div class="row"><div class="col">Release Date:</div><div class="col">'+item.release_date+'</div></div>'
            + '<div class="row"><div class="col">'+item.overview+'</div></div>'
            + '</div></div></div>'
            + '</div><div class="col">'
-           + '<button type="button" class="btn btn-success mt-1 mb-1" data-showName="'+item.seriesName+'" onclick="selectShow(\''+item.seriesName+'\',\''+inputField+'\');"><span class="fa fa-check" "aria-hidden="true"></span></button>'  
+           + '<button type="button" id="successButton-'+item.id+'" class="btn btn-success mt-1 mb-1" data-moviename="'+encodeURIComponent(item.title)+'" data-tmdbid="'+item.id+'" data-releasedate="'+item.release_date+'" onclick="selectMovie(\''+item.id+'\',\''+inputField+'\',\''+idField+'\',\''+dateField+'\');"><span class="fa fa-check" "aria-hidden="true"></span></button>'  
            + '</div></div></div>';
           return ret;
         });
