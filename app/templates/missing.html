@@ -1,0 +1,46 @@
+{% extends "base_layout.html" %}
+{% block pageHeader %}
+                <div class="col"></div>
+                <div class="col text-center">
+                  <h1>Show List</h1>
+                </div>
+{% endblock %}
+{% block pageBody %}
+
+              {% if shows %}
+                {% for show in shows %}
+                  <div class="row mt-1">
+                    <div class="col">
+                    <button class="btn-block text-white {% if show.enabled_override %} bg-dark {% elif show.enabled %}bg-info{% else %}bg-secondary{% endif %}"
+                      type="button" data-toggle="collapse" data-target="#collapse-{{show.name|e}}"
+                      "aria-expanded="false" aria-controls="collapse-{{show.name|e}}">
+                      {{ show.name|e }}
+                    </button>
+                    <div class="collapse" id="collapse-{{show.name|e}}">
+                      <div class="container text-white {% if show.enabled_override %} bg-dark {% elif show.enabled %}bg-info{% else %}bg-secondary{% endif %}">
+<table class="table-sm">
+<th>Season</th>
+{% for s, episodes in show.airedSeasons|dictsort %}
+  <tr>
+    <td class="text-center">
+      {{s}}  
+    </td>
+    {% for ep in episodes|sort(attribute='number') %}
+      <td class="{% if ep.available %} bg-success {% else %} bg-danger {% endif %}">
+       {{ep.number}}
+      </td>
+    {% endfor %}
+  </tr>
+{% endfor %}
+</table>
+                      </div>
+                    </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              {% endif %}
+{% endblock %}
+{% block scripts %}
+<script type="text/javascript">
+</script>
+{% endblock %}
