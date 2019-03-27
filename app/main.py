@@ -3,6 +3,7 @@ from slurpee.utilities import settingsFromFile, settingsFromEnv, TVDBSearch
 from slurpee.dataTypes import ShowDB, TVShow
 import os
 from werkzeug.exceptions import BadRequest
+from slurpee.parsing import hasEpisodeInDir
 
 app = Flask(__name__)
 
@@ -22,6 +23,20 @@ else:
 def root():
     shows = ShowDB(settings['SHOWS_DB_PATH'])
     return render_template('index.html', shows=shows.getShows())
+
+@app.route('/list')
+def showMissing():
+    shows = ShowDB(settings['SHOWS_DB_PATH']).getShows()
+    for show in shows:
+        show.airedSeasons.pop(0,None)
+        for s in show.airedSeasons.keys():
+            for e in show.airedSeasons[s]:
+                show_dir = os.path.join(show.path,"Season "+str(s))
+                if hasEpisodeInDir(show_dir,int(s),int(e['number'])):
+                    e['available'] = 1
+                else:
+                    e['available'] = 0
+    return render_template('missing.html', shows=shows)
 
 @app.route('/addnew')
 def newShow():

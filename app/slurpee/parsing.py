@@ -2,7 +2,7 @@
 
 import re,os
 
-CHARS_TO_REMOVE = ["\'"]
+CHARS_TO_REMOVE = ["\'",":"]
 
 def sanitizeString(s):
     # Remove unusual characters
@@ -59,6 +59,8 @@ def getExtension(filename):
     return ret
 
 def hasEpisodeInDir(dir_path,season,episode):
+    if not os.path.exists(dir_path):
+        return False
     for f in os.listdir(dir_path):
         ep_info = parseEpisode(f)
         if season == ep_info[0] and episode == ep_info[1]: 
