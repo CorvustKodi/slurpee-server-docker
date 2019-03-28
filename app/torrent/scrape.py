@@ -30,15 +30,16 @@ def lookForTarget(settings, targetName):
             if len(results) == 0 and sanitizedTarget != targetName:
                 results = engine.search(urllib.parse.quote(sanitizedTarget),{'trusted_uploaders':settings['TRUSTEDONLY']})
             if len(results) > 0:
+                maxMatches = 10
                 for res in results:
-                    if parsing.fuzzyMatch(targetName,res):
-                        dlTorrent = res
+                    if maxMatches <= 0:
                         break;
+                    if parsing.fuzzyMatch(targetName,res) and res['seeds'] > 0:
+                        bestResults.append(res)
+                        maxMatches = maxMatches - 1
             else:
                 print('No results returned.')
                 continue
-            if dlTorrent is not None :
-                bestResults.append(dlTorrent)
         except Exception as details:
             print('An error occured: %s' % details)
             traceback.print_exc()

@@ -136,3 +136,68 @@ class ShowDB():
             db.commit()
         finally:
             self._close()
+
+class MovieDB():
+    def __init__(self, dbpath, keepOpen=False):
+        self.dbpath = dbpath
+        self.db = None
+        self.keepOpen = keepOpen
+        if keepOpen:
+            self.db = sqlite3.connect(self.dbpath)
+
+    def __delete__(self):
+        if self.keepOpen:
+            self.db.close()
+
+    def _open(self):
+        if not self.keepOpen:
+            self.db = sqlite3.connect(self.dbpath)
+        return self.db
+
+    def _close(self):
+        if not self.keepOpen:
+            self.db.close()
+
+    def addMovie(self, id, name, year, hashstr ):
+        try:
+            db = self._open()
+            cur = db.cursor()
+            cur.execute("INSERT INTO movies (id, name, year, tor_hash) values (?,?,?,?)", (id,name, year, hashstr))
+            db.commit()
+        finally:
+            self._close()
+
+    def getMovies(self):
+        movies = []
+        try:
+            db = self._open()
+            cur = db.cursor()
+            cur.execute("SELECT id, name, year, tor_hash from movies")
+            rows = cur.fetchall()
+            for r in rows:
+                movies.append({'id':r[0],'name':r[1],'year':r[2],'tor_hash':r[3]})
+        finally:
+            self._close()
+        return movies
+
+    def getMovieWithHash(self, tor_hash):
+        try:
+            db = self._open()
+            cur = db.cursor()
+            cur.execute("SELECT id, name, year, tor_hash from movies where tor_hash=?",(tor_hash,))
+            res = cur.fetchone()
+            if res:
+                return {'id':res[0],'name':res[1],'year':res[2],'tor_hash':res[3]}
+            else:
+                return None
+        finally:
+            self._close()
+
+    def removeMovie(self, id):
+        try:
+            db = self._open()
+            cur = db.cursor()
+            cur.execute("DELETE from movies WHERE id = ?",(id,))
+            db.commit()
+        finally:
+            self._close()

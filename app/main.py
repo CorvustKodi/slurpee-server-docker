@@ -1,6 +1,8 @@
 from flask import Flask, request, make_response, jsonify, render_template, redirect, url_for
 from slurpee.utilities import settingsFromFile, settingsFromEnv, TVDBSearch, TMDBSearch
-from slurpee.dataTypes import ShowDB, TVShow
+from slurpee.dataTypes import ShowDB, TVShow, MovieDB
+from torrent.scrape import lookForTarget
+import transmissionrpc
 import os
 from werkzeug.exceptions import BadRequest
 from slurpee.parsing import hasEpisodeInDir
@@ -79,7 +81,21 @@ def postMovie():
     movie_name = request.form.get('name')
     movie_tmdbid = request.form.get('tmdbid')
     movie_year = request.form.get('release_date').split('-')[0]
-    return redirect(url_for('root', status='success', action='add',asset=movie_name))
+
+    movies = MovieDB(settings['SHOWS_DB_PATH'])
+
+    results = lookForTarget(settings, movie_name)
+    # We only accept results that have the release year in them, to make sure we don't get oodles of porn.
+    for torrent in results:
+        if torrent['name'].find(movie_year) != -1:
+            tc = transmissionrpc.Client(settings['RPC_HOST'], port=settings['RPC_PORT'], user=settings['RPC_USER'], \
+                 password=settings['RPC_PASS'])
+            t = tc.add_uri(torrent['url'])
+            tid = list(t)[0]
+            print(tid)
+            movies.addMovie(movie_tmdbid, movie_name, movie_year, t[tid].hashString)
+            return redirect(url_for('root', status='success', action='add',asset=movie_name))
+    return redirect(url_for('root', status='failed', action='add', asset=movie_name))
 
 @app.route('/shows/<int:id>', methods=['GET', 'POST', 'DELETE'])
 def singleShow(id):

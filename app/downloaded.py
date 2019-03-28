@@ -8,18 +8,20 @@ import time
 import transmissionrpc
 
 import slurpee.parsing as parsing
-from slurpee.dataTypes import ShowDB
+from slurpee.dataTypes import ShowDB, MovieDB
 from slurpee.utilities import sendMail, settingsFromFile, settingsFromEnv, doChown, makeChownDirs
 from slurpee.parsing import getExtension
 
 video_extensions = ['mp4', 'mov', 'mkv', 'avi', 'mpg', 'm4v']
 audio_extensions = ['mp3']
 
-def processFiles(files, settings, allshows):
+def processFiles(files, settings):
     ''' 
       Process a lits of files and copy them to appropriate locations      
     '''
     try:
+        allshows = ShowDB(settings['SHOWS_DB_PATH']).getShows()
+
         download_path = settings['DOWNLOADS_PATH']
 
         default_video_output_path = os.path.join(settings['DEFAULT_NEW_PATH'],"Video")
@@ -103,7 +105,7 @@ def processFiles(files, settings, allshows):
         if settings['MAIL_ENABLED']:
             sendMail(settings,'An error has occurred',exc_details)
 
-def mover(settings, allshows, tid = None):
+def mover(settings, tid = None):
     ''' The mover function is called by transmission when download is complete.
       It is responsible for extracting the proper video files from the set
       of files downloaded by the torrent, and placing them in the correct
@@ -114,23 +116,43 @@ def mover(settings, allshows, tid = None):
             tid = os.environ.get('TR_TORRENT_ID')
         torrent_id = None
         if tid is not None:
-            torrent_id = int(tid)
-            print('Torrent ID: %d' % torrent_id)
+           torrent_id = int(tid)
+           print('Torrent ID: %d' % torrent_id)
 
         tc = transmissionrpc.Client(settings['RPC_HOST'], port=settings['RPC_PORT'], user=settings['RPC_USER'], password=settings['RPC_PASS'])
         files_dict = tc.get_files()
         torrent_list = tc.get_torrents()
-        files_list = []
-        if torrent_id != None and torrent_id in files_dict.keys():
+        
+        if torrent_id != None:
+            t = tc.get_torrent(torrent_id)
+        movie = None
+        mdb = MovieDB(settings['SHOWS_DB_PATH'])
+        if t:
+            movie = mdb.getMovieWithHash(t.hashString)
+        if movie:
             for k in files_dict[torrent_id].keys():
-                files_list.append(files_dict[torrent_id][k]['name'])
+                file_name = files_dict[torrent_id][k]['name']
+                file_ext = getExtension(file_name)
+                if file_ext in video_extensions and parsing.fuzzyMatch(movie['name'],os.path.basename(file_name)) != None and file_name.find('sample') == -1:
+                    print("Found a file for %s: %s" % (movie['name'],file_name))
+                    dest_dir = os.path.join(settings['DEFAULT_BASE_PATH'],'Movies')
+                    shutil.copy(os.path.join(settings['DOWNLOADS_PATH'],file_name), os.path.join(dest_dir,os.path.basename(file_name)))
+                    doChown(os.path.join(dest_dir,os.path.basename(file_name)),settings['FILE_OWNER'])
+                    if settings['MAIL_ENABLED']:
+                        sendMail(settings,'%s downloaded' % movie['name'],'%s has been downloaded to %s' % (movie['name'], os.path.join(dest_dir,os.path.basename(file_name))))
+            mdb.removeMovie(movie['id'])
         else:
-            print('No ID match, processing all torrents')
-            for t in files_dict.keys():
-                for k in files_dict[t].keys():
-                    files_list.append(files_dict[t][k]['name'])
-        print(files_list)
-        processFiles(files_list, settings, allshows)
+            files_list = []
+            if torrent_id != None and torrent_id in files_dict.keys():
+                for k in files_dict[torrent_id].keys():
+                    files_list.append(files_dict[torrent_id][k]['name'])
+            else:
+                print('No ID match, processing all torrents')
+                for t in files_dict.keys():
+                    for k in files_dict[t].keys():
+                        files_list.append(files_dict[t][k]['name'])
+            print(files_list)
+            processFiles(files_list, settings)
     except Exception:
         exc_details = traceback.format_exc()
         print('%s' % exc_details)
@@ -173,10 +195,9 @@ if __name__ == '__main__':
         settings = settingsFromFile(sys.argv[1])
     else:
         settings = settingsFromEnv()
-    allshows = ShowDB(settings['SHOWS_DB_PATH']).getShows()
     for f in os.listdir('/done-torrents'):
         try:
-            mover(settings,allshows,int(os.path.basename(f)))
+            mover(settings,int(os.path.basename(f)))
         finally:
             os.remove(os.path.join('/done-torrents',f))
     cleanup(settings)
