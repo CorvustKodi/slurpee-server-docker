@@ -24,7 +24,7 @@
 
 <div class="row mt-1">
   <div class="col">
-    <form id="add-movie-form" method="post" action="/movies" role="form" class="form-horizontal">
+    <form id="add-movie-form" role="form" class="form-horizontal">
       <fieldset>
 
         <!-- Text input-->
@@ -52,13 +52,18 @@
         </div>
         <!-- Button (Double) -->
         <div class="form-group">
-          <div class="col">
-            <button id="buttonSubmit" name="buttonSubmit" class="btn btn-success d-none">Save</button>
-            <a href="/index.html" id="buttonCancel" name="buttonCancel" class="btn btn-danger">Cancel</a>
-          </div>
         </div>
       </fieldset>
     </form>
+    <div class="col">
+      <button id="buttonSubmit" type="button" name="buttonSubmit" class="btn btn-success d-none" onclick="getTorrents(this)">Search</button>
+      <a href="/index.html" id="buttonCancel" name="buttonCancel" class="btn btn-danger">Cancel</a>
+    </div>
+  </div>
+</div>
+<div class="row mt-1">
+  <div class="col">
+    <div id="torrentListDiv"></div>
   </div>
 </div>
 {% endblock %}
@@ -71,6 +76,7 @@ function clearMovie() {
   $('#tmdbIDInput').val(0);
   $('#releaseDateInput').val('');
   $('#clearName').addClass('d-none');
+  $('#torrentListDiv').empty();
 }
 
 function selectMovie(id,inputField,idField,dateField) {
@@ -118,6 +124,36 @@ $('#lookupModal').on('show.bs.modal', function(e) {
         }
     });
 });
+
+function torrentClick(e) {
+  $.post('/torrent',$('#add-movie-form').serialize()+'&url='+encodeURIComponent($(e).data("url")))
+}
+
+function getTorrents(e){
+  var btn = $(e);
+  var loadingText = "<i class='fa fa-circle-o-notch fa-spin'></i>Searching";
+  if ( btn.html() !== loadingText) {
+    btn.data('original-text', btn.html());
+    btn.html(loadingText);
+  }
+  $.post('/movies', $('#add-movie-form').serialize(), function(data){
+    var rows = data.map(function(item){
+      var ret = '<tr data-url="'+item.url+'" onclick="torrentClick(this)" style="cursor: pointer">'
+       +'<td>'+item.name+'</td>'
+       +'<td>'+item.seeds+'</td>'
+       + '</tr>';
+      return ret;
+     });
+
+    $('#torrentListDiv').empty();
+    if(rows.length){
+      $('#torrentListDiv').html('<table class="table">'+rows.join('')+'</table>');
+    }else{
+      $('#torrentListDiv').text("Sorry, no results found. Guess it's not popular enough.");
+    }
+    btn.html(btn.data('original-text'));
+  }, 'json');
+}
 </script>
 {% endblock %}
 
