@@ -1,11 +1,15 @@
 {% extends "base_layout.html" %}
 {% block pageHeader %}
                 <div class="col"></div>
-                <div class="col text-center">
+                <div class="col"></div>
+                <div class="col-6 text-center">
                   <h1>Show List</h1>
                 </div>
-                <div class="col text-right mr-3">
-                  <button class="btn btn-primary" onclick="window.location.href='/addnew'"><strong>+</strong></button>
+                <div class="col text-right ">
+                  <button class="btn btn-primary" onclick="window.location.href='/addnew'"><strong>+ Show</strong></button>
+                </div>
+                <div class="col text-right ">
+                  <button class="btn btn-success" onclick="window.location.href='/addmovie'"><strong>+ Movie</strong></button>
                 </div>
 {% endblock %}
 {% block pageBody %}
