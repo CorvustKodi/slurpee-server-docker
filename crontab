@@ -1,4 +1,4 @@
 # m   h   dom mon dow command
   4   *   *   *   *   /usr/bin/execute /search.sh
   */5 *   *   *   *   /usr/bin/execute /done.sh
-  35  2   *   *   6   /usr/bin/execute /update.sh
+  35  2   *   *   *   /usr/bin/execute /update.sh
