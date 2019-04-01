@@ -59,7 +59,7 @@ def scraper(settings, allshows):
             for file_key in files_dict[id_key].keys():
                 torrentFiles.append(files_dict[id_key][file_key]['name'].lower())
     for show in allshows.getShows():
-        if show.enabled and not show.enabled_override:
+        if not show.enabled_override:
             print('Checking %s' % show.name)
             try:
               if show.tvdbid and show.airedSeasons:

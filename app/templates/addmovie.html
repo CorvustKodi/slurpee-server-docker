@@ -138,8 +138,8 @@ function getTorrents(e){
   }
   $.post('/movies', $('#add-movie-form').serialize(), function(data){
     var rows = data.map(function(item){
-      var ret = '<tr data-url="'+item.url+'" onclick="torrentClick(this)" style="cursor: pointer">'
-       +'<td>'+item.name+'</td>'
+      var ret = '<tr>' // data-url="'+item.url+'" onclick="torrentClick(this)" style="cursor: pointer">'
+       +'<td><button class="btn" data-url="'+item.url+'" onclick="torrentClick(this)">'+item.name+'</button></td>'
        +'<td>'+item.seeds+'</td>'
        + '</tr>';
       return ret;
