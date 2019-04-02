@@ -76,7 +76,7 @@ def processFiles(files, settings):
                     if len(show.filename) > len(bestmatch.filename):
                         bestmatch = show
 
-                season, episode = parsing.parseEpisode(tfile)
+                season, episode = parsing.parseEpisode(os.path.basename(tfile))
                 if int(season) < 10:
                     season = '0' + str(int(season))
                 if int(episode) < 10:
