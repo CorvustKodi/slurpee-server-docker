@@ -97,9 +97,11 @@ class ShowDB():
             else:
                 cur.execute("UPDATE shows SET name=?, path=?, filename=?, season=?, minepisode=?, enabled=?, tvdbid=?, enabled_override=? WHERE id=?",
                   (show.name, show.path, show.filename, show.season, show.minepisode, show.enabled, show.tvdbid, show.enabled_override, show.id))
+            # Drop all current episode listings and update with latest data
+            cur.execute("DELETE from tvdbepisdoes where show_fk=?",(show.tvdbid,))
             for s in show.airedSeasons.keys():
                 for e in show.airedSeasons[s]:
-                    cur.execute("INSERT OR REPLACE INTO tvdbepisodes (id, number, season, show_fk, lastUpdated, airedDate) values (?,?,?,?,?,?)",
+                    cur.execute("INSERT INTO tvdbepisodes (id, number, season, show_fk, lastUpdated, airedDate) values (?,?,?,?,?,?)",
                       (e['id'], e['number'], s, show.tvdbid, e['lastUpdated'], e['date']))
             db.commit()
         finally:
