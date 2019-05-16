@@ -126,7 +126,9 @@ $('#lookupModal').on('show.bs.modal', function(e) {
 });
 
 function torrentClick(e) {
-  $.post('/torrent',$('#add-movie-form').serialize()+'&url='+encodeURIComponent($(e).data("url")))
+  $.post('/torrent',$('#add-movie-form').serialize()+'&url='+$(e).data("url"), function(data){
+    window.location.href = '/index.html?status=success&action=add&asset='+$(e).data("itemname");
+  });
 }
 
 function getTorrents(e){
@@ -138,7 +140,7 @@ function getTorrents(e){
   }
   $.post('/movies', $('#add-movie-form').serialize(), function(data){
     var rows = data.map(function(item){
-      var ret = '<tr>' // data-url="'+item.url+'" onclick="torrentClick(this)" style="cursor: pointer">'
+      var ret = '<tr>' // data-url="'+encodeURIComponent(item.url)+'" data-itemname="'+encodeURIComponent(item.name)+'" onclick="torrentClick(this)" style="cursor: pointer">'
        +'<td><button class="btn" data-url="'+item.url+'" onclick="torrentClick(this)">'+item.name+'</button></td>'
        +'<td>'+item.seeds+'</td>'
        + '</tr>';

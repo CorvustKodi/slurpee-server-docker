@@ -11,8 +11,8 @@ if __name__ == '__main__':
     else:
         settings = settingsFromEnv()
     allshows = ShowDB(settings['SHOWS_DB_PATH'])
-    lastAiredDate = None
     for show in allshows.getShows():
+        lastAiredDate = None
         tvdb = TVDBSearch(settings['TVDB_API_KEY'],'en-us')
         if not show.tvdbid:
             # Do a lookup against theTVDB. Add the ID ONLY if we get an exact name match, which we should since Plex
