@@ -1,6 +1,7 @@
 import requests,urllib
 import json
 import os,shutil
+import time
 from xml.dom.minidom import parse
 import smtplib
 from email.message import EmailMessage
@@ -149,6 +150,20 @@ def makeChownDirs(path, owner):
     res += [path]
     return res
 
+def safeCopy(source, dest, owner, retry=True):
+    orig_size = os.path.getsize(source)
+    shutil.copy(source, dest)
+    doChown(dest,owner)
+    dest_size = os.path.getsize(dest)
+    if orig_size != dest_size:
+        os.unlink(dest)
+        if retry:
+            time.sleep(10)
+            safeCopy(source,dest,owner,retry=False)
+        else:
+            raise Exception('Failed to copy to %s - invalid destination size' % dest)
+            
+    
 class TVDBSearch(object):
     
     def login(self):

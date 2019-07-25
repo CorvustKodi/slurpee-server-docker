@@ -2,18 +2,18 @@
 
 import sys
 import os
-import shutil
 import traceback
 import time
 import transmissionrpc
 
 import slurpee.parsing as parsing
 from slurpee.dataTypes import ShowDB, MovieDB
-from slurpee.utilities import sendMail, settingsFromFile, settingsFromEnv, doChown, makeChownDirs
+from slurpee.utilities import sendMail, settingsFromFile, settingsFromEnv, makeChownDirs, safeCopy
 from slurpee.parsing import getExtension
 
 video_extensions = ['mp4', 'mov', 'mkv', 'avi', 'mpg', 'm4v']
 audio_extensions = ['mp3']
+
 
 def processFiles(files, settings):
     ''' 
@@ -44,8 +44,11 @@ def processFiles(files, settings):
         for tfile in audio_files:
             try:
                 # No fancy processing for audio files, just copy to the NEW directory
-                shutil.copy(os.path.join(download_path,tfile), os.path.join(default_audio_output_path,os.path.basename(tfile)))
-                doChown(os.path.join(default_audio_output_path,os.path.basename(tfile)),settings['FILE_OWNER'])
+                safeCopy(
+                    os.path.join(download_path,tfile), 
+                    os.path.join(default_audio_output_path,os.path.basename(tfile)),
+                    settings['FILE_OWNER']
+                )
             except:
                 pass
 
@@ -62,8 +65,11 @@ def processFiles(files, settings):
                 print('No match found for vidoe file %s' % tfile)
                 try:
                     print('Copying to default video directory: %s' % os.path.join(download_path,os.path.basename(tfile)))
-                    shutil.copy(os.path.join(download_path,tfile), os.path.join(default_video_output_path,os.path.basename(tfile)))
-                    doChown(os.path.join(default_video_output_path,os.path.basename(tfile)),settings['FILE_OWNER'])
+                    safeCopy(
+                        os.path.join(os.path.join(download_path,tfile), 
+                        os.path.join(default_video_output_path,os.path.basename(tfile)),
+                        settings['FILE_OWNER']
+                    )
                     if settings['MAIL_ENABLED']:
                         sendMail(settings,'New video downloaded','%s - new file in videos' % os.path.basename(tfile))
                 except:
@@ -91,8 +97,11 @@ def processFiles(files, settings):
                     target_file = bestmatch.filename + ' s' + str(season) + 'e' + str(episode) + '.' + parsing.getExtension(str(tfile))
                     if not os.path.isfile(os.path.join(dest_dir,target_file)):
                         print("Copying from %s to %s" % (os.path.join(download_path,tfile),os.path.join(dest_dir, target_file)))
-                        shutil.copy(os.path.join(download_path,tfile), os.path.join(dest_dir,target_file))
-                        doChown(os.path.join(dest_dir,target_file),settings['FILE_OWNER'])
+                        safeCopy(
+                            os.path.join(os.path.join(download_path,tfile), 
+                            os.path.join(dest_dir,target_file),
+                            settings['FILE_OWNER']
+                        )
 
                         if settings['MAIL_ENABLED']:
                             sendMail(settings,'%s - new episode available' % bestmatch.name,'A new episode of %s is available for playback in \
@@ -136,8 +145,11 @@ def mover(settings, tid = None):
                 if file_ext in video_extensions and parsing.fuzzyMatch(movie['name'],os.path.basename(file_name)) != None and file_name.find('sample') == -1:
                     print("Found a file for %s: %s" % (movie['name'],file_name))
                     dest_dir = os.path.join(settings['DEFAULT_BASE_PATH'],'Movies')
-                    shutil.copy(os.path.join(settings['DOWNLOADS_PATH'],file_name), os.path.join(dest_dir,os.path.basename(file_name)))
-                    doChown(os.path.join(dest_dir,os.path.basename(file_name)),settings['FILE_OWNER'])
+                    safeCopy(
+                        os.path.join(os.path.join(settings['DOWNLOADS_PATH'],file_name),
+                        os.path.join(dest_dir,os.path.basename(file_name)),
+                        settings['FILE_OWNER']
+                    )
                     if settings['MAIL_ENABLED']:
                         sendMail(settings,'%s downloaded' % movie['name'],'%s has been downloaded to %s' % (movie['name'], os.path.join(dest_dir,os.path.basename(file_name))))
             mdb.removeMovie(movie['id'])
