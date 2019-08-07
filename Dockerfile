@@ -10,7 +10,7 @@ RUN mkdir -p \
     /opt/cron/cronstamps \
     /done-torrents \
     /Torrent-Downloads \
-    /Content && ln -sf /proc/1/fd/1 /opt/cron/log
+    /Content
 COPY ./supervisord.ini /etc/supervisor.d/
 COPY ./execute /usr/bin/
 COPY ./search.sh /search.sh
