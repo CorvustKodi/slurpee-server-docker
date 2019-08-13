@@ -102,32 +102,35 @@ def processFiles(files, settings):
                 else:
                     print("Target file %s already exists" % os.path.join(dest_dir,target_file))
 
-def mover(settings, tid = None):
+def mover(settings, thash = None):
     ''' The mover function is called by transmission when download is complete.
       It is responsible for extracting the proper video files from the set
       of files downloaded by the torrent, and placing them in the correct
       destination directory.
     '''
-    if tid == None:
-        tid = os.environ.get('TR_TORRENT_ID')
-    torrent_id = None
-    if tid is not None:
-       torrent_id = int(tid)
-       print('Torrent ID: %d' % torrent_id)
+    if thash == None:
+        thash = os.environ.get('TR_TORRENT_HASH')
 
     tc = transmissionrpc.Client(settings['RPC_HOST'], port=settings['RPC_PORT'], user=settings['RPC_USER'], password=settings['RPC_PASS'])
     files_dict = tc.get_files()
     torrent_list = tc.get_torrents()
+    t = None
+    for torrent in torrent_list:
+        if torrent.hashString == thash:
+            t = torrent
+            break
+    if t is None:
+        print("Could not find torrent with hash %s" % thash)
+        if settings['MAIL_ENABLED']:
+            sendMail(settings,'An error has occurred','Could not find torrent with hash %s' % thash)
+        return
 
-    if torrent_id != None:
-        t = tc.get_torrent(torrent_id)
     movie = None
     mdb = MovieDB(settings['SHOWS_DB_PATH'])
-    if t:
-        movie = mdb.getMovieWithHash(t.hashString)
+    movie = mdb.getMovieWithHash(t.hashString)
     if movie:
-        for k in files_dict[torrent_id].keys():
-            file_name = files_dict[torrent_id][k]['name']
+        for k in files_dict[t.id].keys():
+            file_name = files_dict[t.id][k]['name']
             file_ext = getExtension(file_name)
             if file_ext in video_extensions and parsing.fuzzyMatch(movie['name'],os.path.basename(file_name)) != None and file_name.find('sample') == -1:
                 print("Found a file for %s: %s" % (movie['name'],file_name))
@@ -142,9 +145,9 @@ def mover(settings, tid = None):
         mdb.removeMovie(movie['id'])
     else:
         files_list = []
-        if torrent_id != None and torrent_id in files_dict.keys():
-            for k in files_dict[torrent_id].keys():
-                files_list.append(files_dict[torrent_id][k]['name'])
+        if t.id in files_dict.keys():
+            for k in files_dict[t.id].keys():
+                files_list.append(files_dict[t.id][k]['name'])
         else:
             print('No ID match, processing all torrents')
             for t in files_dict.keys():
@@ -191,7 +194,7 @@ if __name__ == '__main__':
         settings = settingsFromEnv()
     for f in os.listdir('/done-torrents'):
         try:
-            mover(settings,int(os.path.basename(f)))
+            mover(settings,os.path.basename(f))
             os.remove(os.path.join('/done-torrents',f))
         except Exception:
             exc_details = traceback.format_exc()
