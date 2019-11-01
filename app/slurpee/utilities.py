@@ -116,7 +116,7 @@ def settingsFromFile(settings_file):
         pass
     return ret
 
-def sendMail(settings,subject_text,body_text):
+def sendMail(settings,subject_text,body_text,dest=None):
   try:
     if settings['SMTP_SECURE']:
         server = smtplib.SMTP_SSL(settings['SMTP_HOST'], settings['SMTP_PORT'])
@@ -128,8 +128,10 @@ def sendMail(settings,subject_text,body_text):
     msg.set_content(body_text)
     msg['Subject'] = subject_text
     msg['From'] = "Slurpee"
-    msg['To'] = settings['MAIL_DEST']
-
+    if dest is None:
+        msg['To'] = settings['MAIL_DEST']
+    else:
+        msg['To'] = dest
     server.send_message(msg)
     server.quit()
   except:

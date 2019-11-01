@@ -2,7 +2,7 @@ import xml.dom.minidom
 import sqlite3
 
 class TVShow():
-    def __init__(self, id, name, path, filename, season, minepisode, enabled, tvdbid=0, enabled_override=0):
+    def __init__(self, id, name, path, filename, season, minepisode, enabled, tvdbid=0, enabled_override=0, email=None):
         if id is not None:
           self.id = int(id)
         else:
@@ -22,6 +22,7 @@ class TVShow():
         else:
             self.tvdbid = 0
         self.airedSeasons = {}
+        self.notify_email = email
 
     def __str__(self):
         return str(self.__dict__)
@@ -40,7 +41,8 @@ class TVShow():
           'enabled':self.enabled,
           'tvdbid':self.tvdbid,
           'enabled_override':self.enabled_override,
-          'airedSeasons':self.airedSeasons
+          'airedSeasons':self.airedSeasons,
+          'notify_email':self.notify_email
         }
 
 class ShowDB():
@@ -92,8 +94,8 @@ class ShowDB():
             db = self._open()
             cur = db.cursor()
             if show.id is None:
-                cur.execute("INSERT INTO shows (name, path, filename, season, minepisode, enabled, tvdbid, enabled_override) values (?,?,?,?,?,?,?,?)",
-                  (show.name, show.path, show.filename, show.season, show.minepisode, show.enabled, show.tvdbid, show.enabled_override))
+                cur.execute("INSERT INTO shows (name, path, filename, season, minepisode, enabled, tvdbid, enabled_override, notify_email) values (?,?,?,?,?,?,?,?,?)",
+                  (show.name, show.path, show.filename, show.season, show.minepisode, show.enabled, show.tvdbid, show.enabled_override, show.notify_email))
             else:
                 cur.execute("UPDATE shows SET name=?, path=?, filename=?, season=?, minepisode=?, enabled=?, tvdbid=?, enabled_override=? WHERE id=?",
                   (show.name, show.path, show.filename, show.season, show.minepisode, show.enabled, show.tvdbid, show.enabled_override, show.id))
@@ -160,11 +162,11 @@ class MovieDB():
         if not self.keepOpen:
             self.db.close()
 
-    def addMovie(self, id, name, year, hashstr ):
+    def addMovie(self, id, name, year, hashstr, email ):
         try:
             db = self._open()
             cur = db.cursor()
-            cur.execute("INSERT INTO movies (id, name, year, tor_hash) values (?,?,?,?)", (id,name, year, hashstr))
+            cur.execute("INSERT INTO movies (id, name, year, tor_hash, notify_email) values (?,?,?,?,?)", (id,name, year, hashstr, email))
             db.commit()
         finally:
             self._close()
@@ -174,10 +176,10 @@ class MovieDB():
         try:
             db = self._open()
             cur = db.cursor()
-            cur.execute("SELECT id, name, year, tor_hash from movies")
+            cur.execute("SELECT id, name, year, tor_hash, notify_email from movies")
             rows = cur.fetchall()
             for r in rows:
-                movies.append({'id':r[0],'name':r[1],'year':r[2],'tor_hash':r[3]})
+                movies.append({'id':r[0],'name':r[1],'year':r[2],'tor_hash':r[3], 'notify_email':r[4]})
         finally:
             self._close()
         return movies
@@ -186,10 +188,10 @@ class MovieDB():
         try:
             db = self._open()
             cur = db.cursor()
-            cur.execute("SELECT id, name, year, tor_hash from movies where tor_hash=?",(tor_hash,))
+            cur.execute("SELECT id, name, year, tor_hash, notify_email from movies where tor_hash=?",(tor_hash,))
             res = cur.fetchone()
             if res:
-                return {'id':res[0],'name':res[1],'year':res[2],'tor_hash':res[3]}
+                return {'id':res[0],'name':res[1],'year':res[2],'tor_hash':res[3], 'notify_email':res[4]}
             else:
                 return None
         finally:

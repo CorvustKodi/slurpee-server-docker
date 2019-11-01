@@ -13,5 +13,10 @@ with sqlite3.connect(sys.argv[1]) as conn:
     conn.execute('ALTER TABLE shows ADD COLUMN enabled_override INTEGER')
   except:
     pass
+  try:
+    conn.execute('ALTER TABLE shows ADD COLUMN notify_email TEXT')
+    conn.execute('ALTER TABLE movies ADD COLUMN notify_email TEXT')
+  except:
+    pass
   conn.commit()
   print('Database created/updated')

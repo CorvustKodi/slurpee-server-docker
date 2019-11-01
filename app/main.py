@@ -62,7 +62,8 @@ def listShows():
                1,
                1,
                request.form.get('tvdbid'),
-               0
+               0,
+               request.form.get('notify_email')
              )
       if show.tvdbid:
           tvdb = TVDBSearch(settings['TVDB_API_KEY'],'en-us')
@@ -100,6 +101,7 @@ def postTorrent():
     movie_name = request.form.get('name')
     movie_tmdbid = request.form.get('tmdbid')
     movie_year = request.form.get('release_date').split('-')[0]
+    movie_email = request.form.get('notify_email')
 
     print(torrent_url)
     tc = transmissionrpc.Client(settings['RPC_HOST'], port=settings['RPC_PORT'], user=settings['RPC_USER'], password=settings['RPC_PASS'])
@@ -107,7 +109,7 @@ def postTorrent():
     tid = list(t)[0]
     print(tid)
     movies = MovieDB(settings['SHOWS_DB_PATH'])
-    movies.addMovie(movie_tmdbid, movie_name, movie_year, t[tid].hashString)
+    movies.addMovie(movie_tmdbid, movie_name, movie_year, t[tid].hashString, movie_email)
     return redirect(url_for('root', status='success', action='add',asset=movie_name))
 
 @app.route('/shows/<int:id>', methods=['GET', 'POST', 'DELETE'])
@@ -131,6 +133,13 @@ def singleShow(id):
             show.enabled_override = 1
         else:
             show.enabled_override = 0
+        if 'notify_email' in request.form:
+            email = request.form.get('notify_email')
+            if email is not None:
+                if shows.notify_email is None or len(shows.notify_email) == 0:
+                    shows.notify_email = email
+                elif email not in shows.notify_email.split(','):
+                    shows.notify_email = ','.join(shows.notify_email,email)             
         shows.updateShow(show)
         return redirect(url_for('root',status='success',action='update',asset=show.name))
     elif request.method == 'DELETE':

@@ -99,6 +99,10 @@ def processFiles(files, settings):
                     if settings['MAIL_ENABLED']:
                         sendMail(settings,'%s - new episode available' % bestmatch.name,'A new episode of %s is available for playback in \
                           %s/Season %d: %s' % (bestmatch.name, bestmatch.path, int(season),target_file))
+                        if show.notify_email is not None and len(show.notify_email) > 0:
+                            for email in show.notify_email.split(','):
+                                sendMail(settings,'%s - new episode available' % bestmatch.name,'A new episode of %s is available: %s' % (bestmatch.name, target_file), dest=email)
+
                 else:
                     print("Target file %s already exists" % os.path.join(dest_dir,target_file))
 
@@ -142,6 +146,10 @@ def mover(settings, thash = None):
                 )
                 if settings['MAIL_ENABLED']:
                     sendMail(settings,'%s downloaded' % movie['name'],'%s has been downloaded to %s' % (movie['name'], os.path.join(dest_dir,os.path.basename(file_name))))
+                    if movie['notify_email'] is not None and len(movie['notify_email']) > 0:
+                        for email in movie['notify_email'].split(','):
+                            sendMail(settings,'%s downloaded' % movie['name'],'%s has been downloaded ' % (movie['name']),dest=email)
+
         mdb.removeMovie(movie['id'])
     else:
         files_list = []

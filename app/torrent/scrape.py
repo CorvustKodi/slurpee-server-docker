@@ -83,8 +83,8 @@ def scraper(settings, allshows):
                         try:
                             e_date = datetime.datetime.strptime(episode['date'],"%Y-%m-%d").date()
                             td = e_date - datetime.date.today()
-                            if td.days > 2:
-                                # This episode is at least 2 days away from airing, don't try to download it yet.
+                            if td.days > -1:
+                                # wait until the episdoe is airing, don't try to download it yet.
                                 continue
                         except:
                             # If the date isn't defined, skip it, it's likely way off in the future
