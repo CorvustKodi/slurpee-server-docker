@@ -3,7 +3,7 @@ FROM tiangolo/uwsgi-nginx-flask:python3.6-alpine3.8
 MAINTAINER CorvustKodi
 
 RUN addgroup -g 1000 slurp && adduser -D -u 1000 -G slurp slurp
-RUN apk add --no-cache dcron
+RUN apk add --no-cache dcron ffmpeg
 RUN mkdir -p \
     /opt/cron/periodic \
     /opt/cron/crontabs \

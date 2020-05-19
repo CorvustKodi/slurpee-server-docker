@@ -7,6 +7,8 @@ import smtplib
 from email.message import EmailMessage
 import traceback
 from copy import deepcopy
+import subprocess
+
 
 baseSettings = {'RPC_HOST':'127.0.0.1', 'RPC_PORT':2580, 'RPC_USER':'', 
     'RPC_PASS':'', 'TRUSTEDONLY':False, 'SEARCHERS':[], 'SHOWS_DB_PATH':'',
@@ -154,6 +156,9 @@ def makeChownDirs(path, owner):
 
 def safeCopy(source, dest, owner, retry=True):
     orig_size = os.path.getsize(source)
+    proc_status = subprocess.run(['ffprobe', source])
+    if proc_status.returncode != 0:
+        raise Exception('Invalid video file: %s' % source)
     shutil.copy(source, dest)
     doChown(dest,owner)
     dest_size = os.path.getsize(dest)
@@ -164,7 +169,7 @@ def safeCopy(source, dest, owner, retry=True):
             safeCopy(source,dest,owner,retry=False)
         else:
             raise Exception('Failed to copy to %s - invalid destination size' % dest)
-            
+    return True            
     
 class TVDBSearch(object):
     

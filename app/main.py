@@ -136,10 +136,10 @@ def singleShow(id):
         if 'notify_email' in request.form:
             email = request.form.get('notify_email')
             if email is not None:
-                if shows.notify_email is None or len(shows.notify_email) == 0:
-                    shows.notify_email = email
-                elif email not in shows.notify_email.split(','):
-                    shows.notify_email = ','.join(shows.notify_email,email)             
+                if show.notify_email is None or len(show.notify_email) == 0:
+                    show.notify_email = email
+                elif email not in show.notify_email.split(','):
+                    show.notify_email = ','.join((show.notify_email,email))
         shows.updateShow(show)
         return redirect(url_for('root',status='success',action='update',asset=show.name))
     elif request.method == 'DELETE':

@@ -60,12 +60,11 @@ def processFiles(files, settings):
         if not foundShow:
             print('No match found for vidoe file %s' % tfile)
             print('Copying to default video directory: %s' % os.path.join(download_path,os.path.basename(tfile)))
-            safeCopy(
+            if safeCopy(
                 os.path.join(os.path.join(download_path,tfile)),
                 os.path.join(default_video_output_path,os.path.basename(tfile)),
                 settings['FILE_OWNER']
-            )
-            if settings['MAIL_ENABLED']:
+            ) and settings['MAIL_ENABLED']:
                 sendMail(settings,'New video downloaded','%s - new file in videos' % os.path.basename(tfile))
         else:
             # All of the shows in 'matching' appear in the video filename. It stands to reason
@@ -90,13 +89,11 @@ def processFiles(files, settings):
                 target_file = bestmatch.filename + ' s' + str(season) + 'e' + str(episode) + '.' + parsing.getExtension(str(tfile))
                 if not os.path.isfile(os.path.join(dest_dir,target_file)):
                     print("Copying from %s to %s" % (os.path.join(download_path,tfile),os.path.join(dest_dir, target_file)))
-                    safeCopy(
+                    if safeCopy(
                         os.path.join(os.path.join(download_path,tfile)),
                         os.path.join(dest_dir,target_file),
                         settings['FILE_OWNER']
-                    )
-
-                    if settings['MAIL_ENABLED']:
+                    ) and settings['MAIL_ENABLED']:
                         sendMail(settings,'%s - new episode available' % bestmatch.name,'A new episode of %s is available for playback in \
                           %s/Season %d: %s' % (bestmatch.name, bestmatch.path, int(season),target_file))
                         if show.notify_email is not None and len(show.notify_email) > 0:
@@ -139,12 +136,11 @@ def mover(settings, thash = None):
             if file_ext in video_extensions and parsing.fuzzyMatch(movie['name'],os.path.basename(file_name)) != None and file_name.find('sample') == -1:
                 print("Found a file for %s: %s" % (movie['name'],file_name))
                 dest_dir = os.path.join(settings['DEFAULT_BASE_PATH'],'Movies')
-                safeCopy(
+                if safeCopy(
                     os.path.join(os.path.join(settings['DOWNLOADS_PATH'],file_name)),
                     os.path.join(dest_dir,os.path.basename(file_name)),
                     settings['FILE_OWNER']
-                )
-                if settings['MAIL_ENABLED']:
+                ) and settings['MAIL_ENABLED']:
                     sendMail(settings,'%s downloaded' % movie['name'],'%s has been downloaded to %s' % (movie['name'], os.path.join(dest_dir,os.path.basename(file_name))))
                     if movie['notify_email'] is not None and len(movie['notify_email']) > 0:
                         for email in movie['notify_email'].split(','):
