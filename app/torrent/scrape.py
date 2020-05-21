@@ -110,6 +110,13 @@ def scraper(settings, allshows):
                                         found = True
                                         break
                                 if not found:
+                                    for t in activeTorrents:
+                                        hasMatch = parsing.fuzzyMatch(targetName, str(t._get_name_string()))
+                                        if hasMatch != None:
+                                            print('Found existing torrent: %s' % t._get_name_string())
+                                            found = True
+                                            break
+                                if not found:
                                     print('Adding torrent: %s' % dlTorrent['url'])
                                     tc.add_uri(dlTorrent['url'])
                                     dlPerShow = dlPerShow - 1

@@ -168,23 +168,15 @@ def cleanup(settings):
         oneDay = 60*60*24
         oneWeek = oneDay*7
         for t in torrent_list:
-            doneDate = t.__getattr__('doneDate')
+            doneDate = t.date_done()
+            startDate = t.date_started()
             id = int(t.__getattr__('id'))
-            if doneDate > 0 and doneDate < (now - oneWeek):
+            if startDate > 0 and startDate < (now - oneWeek):
                 print('Found an old torrent (id = %d) - removing.' % id)
-                tc.remove_torrent(id,True)
-            elif doneDate > 0 and doneDate < (now - oneDay):
-                # Clean up torrents that don't have useful files after 24 hours
-                hasGoodFile = False
-                for f in t.files().values():
-                    file_ext = getExtension(f['name'])
-                    if file_ext in video_extensions or file_ext in audio_extensions:
-                        hasGoodFile = True
-                        break
-                if not hasGoodFile:
-                    print('Found a useless torrent (id = %d) - removing.' % id)
-                    tc.remove_torrent(id,True)
-                    
+                tc.remove_torrent(id, True)
+            elif doneDate > 0 and doneDate < (now - oneDay*3):
+                print('Found a completed torrent (id = %d) - removing.' % id)
+                tc.remove_torrent(id, True)
     except Exception:
         exc_details = traceback.format_exc()
         print('%s' % exc_details)
