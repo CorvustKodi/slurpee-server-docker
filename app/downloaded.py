@@ -168,8 +168,8 @@ def cleanup(settings):
         oneDay = 60*60*24
         oneWeek = oneDay*7
         for t in torrent_list:
-            doneDate = t.date_done()
-            startDate = t.date_started()
+            doneDate = t.date_done
+            startDate = t.date_started
             id = int(t.__getattr__('id'))
             if startDate > 0 and startDate < (now - oneWeek):
                 print('Found an old torrent (id = %d) - removing.' % id)
