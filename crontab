@@ -1,4 +1,4 @@
 # m   h   dom mon dow command
-  4   *   *   *   *   flock /tmp/slurp.lck /usr/bin/execute /search.sh
-  */5 *   *   *   *   flock -n /tmp/slurp.lck /usr/bin/execute /done.sh
+  4   *   *   *   *   flock -n /tmp/slurp.lck /usr/bin/execute /search.sh
+  */5 *   *   *   *   flock -n /tmp/slurp-done.lck /usr/bin/execute /done.sh
   35  2   *   *   *   flock /tmp/slurp.lck /usr/bin/execute /update.sh
