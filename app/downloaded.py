@@ -172,10 +172,10 @@ def cleanup(settings):
             doneDate = t.date_done
             startDate = t.date_started
             id = int(t.__getattr__('id'))
-            if startDate and startDate < (datetime.fromtimestamp(now) - timedelta(weeks=1)):
+            if startDate > datetime.fromtimestamp(0) and startDate < (datetime.fromtimestamp(now) - timedelta(weeks=1)):
                 print('Found an old torrent (id = %d) - removing.' % id)
                 tc.remove_torrent(id, True)
-            elif doneDate and doneDate < (datetime.fromtimestamp(now) - timedelta(days=3)):
+            elif doneDate > datetime.fromtimestamp(0) and doneDate < (datetime.fromtimestamp(now) - timedelta(days=3)):
                 print('Found a completed torrent (id = %d) - removing.' % id)
                 tc.remove_torrent(id, True)
     except Exception:
