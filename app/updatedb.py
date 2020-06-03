@@ -35,23 +35,24 @@ if __name__ == '__main__':
             if int(s) < show.season:
                 continue
             for e in seasons[s]:
+                try:
+                    edate = datetime.datetime.strptime(e['date'],"%Y-%m-%d").date()
+                    if not lastAiredDate or lastAiredDate < edate:
+                        lastAiredDate = edate
+                except Exception:
+                    # Some episodes won't have a date defined if the next season has been confirmed, but no air date is set.
+                    pass
                 show_dir = os.path.join(show.path,"Season %d" % int(s))
                 if not os.path.exists(show_dir) or not hasEpisodeInDir(show_dir,int(s), int(e['number']) ):
                     if e['date']:
                         missingEpisode = True
                         print("Found missing episode s%de%d for %s,air date: %s" % (int(s),int(e['number']),show.name,e['date']))
                         break
-                try:
-                    edate = datetime.datetime.strptime(e['date'],"%Y-%m-%d").date()
-                    if not lastAiredDate or lastAiredDate < edate:
-                        lastAiredDate = edate
-                except:
-                    # Some episodes won't have a date defined if the next season has been confirmed, but no air date is set.
-                    pass
-        if not missingEpisode and datetime.date.today() > lastAiredDate:
-            show.enabled = False
-        else:
+        # If there is a missing episode that has already aired, enable the show
+        if missingEpisode and lastAiredDate and lastAiredDate < datetime.date.today():
             show.enabled = True
+        else:
+            show.enabled = False
         allshows.updateShow(show)
     exit(0)
 
