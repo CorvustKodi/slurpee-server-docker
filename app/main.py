@@ -152,7 +152,7 @@ def tvdbSearch():
         return BadRequest('name not provided')
 
     name = request.args.get('name')
-    tvdb = TVDBSearch(settings['TVDB_API_KEY'],'en-us')
+    tvdb = TMDBSearch(settings['THEMOVIEDB_API_KEY'],'en-us', 'tv')
     return make_response(jsonify(tvdb.search(name)), 200)
 
 @app.route('/movies/search')

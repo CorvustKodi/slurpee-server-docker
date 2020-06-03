@@ -1,5 +1,5 @@
 import sys, os
-from slurpee.utilities import settingsFromFile, settingsFromEnv, TVDBSearch
+from slurpee.utilities import settingsFromFile, settingsFromEnv, TMDBSearch
 from slurpee.dataTypes import ShowDB
 from slurpee.parsing import hasEpisodeInDir
 
@@ -13,19 +13,19 @@ if __name__ == '__main__':
     allshows = ShowDB(settings['SHOWS_DB_PATH'])
     for show in allshows.getShows():
         lastAiredDate = None
-        tvdb = TVDBSearch(settings['TVDB_API_KEY'],'en-us')
+        tvdb = TMDBSearch(settings['THEMOVIEDB_API_KEY'],'en-us', 'tv')
         if not show.tvdbid:
             # Do a lookup against theTVDB. Add the ID ONLY if we get an exact name match, which we should since Plex
             # pretty much requires the folder names to match theTVDB names.
             searchResults = tvdb.search(show.name)
             for r in searchResults:
-                if r['seriesName'].lower() == show.name.lower():
+                if r['name'].lower() == show.name.lower():
                     show.tvdbid = int(r['id'])
                     break
         if not show.tvdbid:
             print("Could not find a TVDB id for " + show.name)
             continue
-        seasons = tvdb.getDetails(show.tvdbid)
+        seasons = tvdb.getTVDetails(show.tvdbid)
         show.airedSeasons = seasons
         missingEpisode = False
         for s in seasons.keys():

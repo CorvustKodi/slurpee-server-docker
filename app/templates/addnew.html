@@ -102,16 +102,16 @@ $('#lookupModal').on('show.bs.modal', function(e) {
         var rows = data.map(function(item){
           var ret = '<div class="container-fluid"><div class="row"><div class="col-md-8">'
            + '<button class="btn-block" type="button" data-toggle="collapse" data-target="#collapse-'+item.id+'">'
-           + item.seriesName + '</button><div class="collapse" id="collapse-'+item.id+'">'
+           + item.name + '</button><div class="collapse" id="collapse-'+item.id+'">'
            + '<div class="container"><div class="col">';
-          if(item.banner){
-            ret = ret + '<div class="row"><div class="col"><img class="img-fluid" alt="Responseive image" src="https://thetvdb.com/banners/'+item.banner+'"/></div></div>'
+          if(item.poster_path){
+            ret = ret + '<div class="row"><div class="col"><img class="img-fluid" alt="Responseive image" src="http://image.tmdb.org/t/p/w185'+item.poster_path+'"/></div></div>'
           }
-          ret = ret + '<div class="row"><div class="col">First Aired:</div><div class="col">'+item.firstAired+'</div></div>'
+          ret = ret + '<div class="row"><div class="col">First Aired:</div><div class="col">'+item.first_air_date+'</div></div>'
            + '<div class="row"><div class="col">'+item.overview+'</div></div>'
            + '</div></div></div>'
            + '</div><div class="col">'
-           + '<button type="button" id="successButton-'+item.id+'" class="btn btn-success mt-1 mb-1" data-showname="'+encodeURIComponent(item.seriesName)+'" data-showid="'+item.id+'" onclick="selectShow(\''+item.id+'\',\''+inputField+'\',\''+idField+'\');"><span class="fa fa-check" "aria-hidden="true"></span></button>'  
+           + '<button type="button" id="successButton-'+item.id+'" class="btn btn-success mt-1 mb-1" data-showname="'+encodeURIComponent(item.name)+'" data-showid="'+item.id+'" onclick="selectShow(\''+item.id+'\',\''+inputField+'\',\''+idField+'\');"><span class="fa fa-check" "aria-hidden="true"></span></button>'  
            + '</div></div></div>';
           return ret;
         });

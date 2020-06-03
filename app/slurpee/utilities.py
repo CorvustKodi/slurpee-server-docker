@@ -255,7 +255,7 @@ class TVDBSearch(object):
 class TMDBSearch(object):
     
     def search(self,title):
-        request_url = self.baseURL + '/search/movie/' + '?api_key=' + self.apiKey + '&language=' + self.lang \
+        request_url = self.baseURL + '/search/' + self.search_type + '/' + '?api_key=' + self.apiKey + '&language=' + self.lang \
             + '&include_adult=false&page=1' + '&query=' + urllib.parse.quote(title)
 
         resp = requests.get(request_url)
@@ -269,9 +269,35 @@ class TMDBSearch(object):
         # Useful keys in results: 'title', 'release_date', 'overview', 'poster_path'
         return results
     
-    def __init__(self, apiKey, language='en-US'):
+    def __init__(self, apiKey, language='en-US', db='movie'):
         self.lang = language
         self.baseURL = 'https://api.themoviedb.org/3'
         self.apiKey = apiKey
         self.basePosterPath='http://image.tmdb.org/t/p/w185'
- 
+        self.search_type = db
+
+    def getTVDetails(self, showID):
+        seasons = {}        
+        request_url = self.baseURL + '/tv/' + str(showID) + '?api_key=' + self.apiKey + '&language=' + self.lang
+
+        resp = requests.get(request_url)
+        if not resp.ok:
+            print('Failed request to TheMovieDB: '+str(resp.status_code))
+            resp.raise_for_status()
+        respJ = resp.json()
+        if 'seasons' not in respJ.keys():
+            return seasons
+        for season in respJ['seasons']:
+            seasonNumber = season.get('season_number')
+            seasons[seasonNumber] = []
+            search_url = self.baseURL + "/tv/" + str(showID) + "/season/" + str(seasonNumber) + '?api_key=' + self.apiKey + '&language=' + self.lang
+            tvdb = requests.get(search_url)
+            seasonJ = tvdb.json()
+            print(seasonJ)
+            for episode in seasonJ['episodes']:
+                num = episode['episode_number']
+                date = episode['air_date']
+                id = episode['id']
+                lastUpdated = '2020-06-02'
+                seasons[seasonNumber].append({'number':num , 'id':id, 'date':date, 'lastUpdated':lastUpdated})
+        return seasons
