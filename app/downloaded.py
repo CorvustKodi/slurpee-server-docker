@@ -95,8 +95,8 @@ def processFiles(files, settings):
                         os.path.join(os.path.join(download_path,tfile['name'])),
                         os.path.join(dest_dir,target_file),
                         settings['FILE_OWNER'],
-                        os.path.join(os.path.join(incomplete_path,tfile['name'])),
-                        tfile['completed'] if tfile['selected'] else 0
+                        backup_src=os.path.join(os.path.join(incomplete_path,tfile['name'])),
+                        file_size=tfile['completed'] if tfile['selected'] else 0
                     ) and settings['MAIL_ENABLED']:
                         sendMail(settings,'%s - new episode available' % bestmatch.name,'A new episode of %s is available for playback in \
                           %s/Season %d: %s' % (bestmatch.name, bestmatch.path, int(season),target_file))
