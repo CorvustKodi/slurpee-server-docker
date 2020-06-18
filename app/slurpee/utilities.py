@@ -15,7 +15,7 @@ baseSettings = {'RPC_HOST':'127.0.0.1', 'RPC_PORT':2580, 'RPC_USER':'',
     'MAIL_ENABLED':False, 'MAIL_DEST':'', 'SMTP_HOST':'', 'SMTP_PORT':25,
     'SMTP_SECURE':False, 'SMTP_USER':'', 'SMTP_PASS':'', 'DEFAULT_NEW_PATH':'',
     'DEFAULT_BASE_PATH':'', 'DOWNLOADS_PATH':'', 'FILE_OWNER':'', 'TVDB_API_KEY':'',
-    'THEMOVIEDB_API_KEY':''
+    'THEMOVIEDB_API_KEY':'', 'INCOMPLETE_PATH':'',
 }
 
 def settingsFromEnv():
@@ -51,6 +51,7 @@ def settingsFromEnv():
     ret['DEFAULT_NEW_PATH'] = os.environ.get('DEFAULT_NEW_PATH',ret['DEFAULT_NEW_PATH'])
     ret['DEFAULT_BASE_PATH'] = os.environ.get('DEFAULT_BASE_PATH',ret['DEFAULT_BASE_PATH'])
     ret['DOWNLOADS_PATH'] = os.environ.get('DOWNLOADS_PATH',ret['DOWNLOADS_PATH'])
+    ret['INCOMPLETE_PATH'] = os.environ.get('INCOMPLETE_PATH',ret['INCOMPLETE_PATH'])
     ret['FILE_OWNER'] = os.environ.get('FILE_OWNER',ret['FILE_OWNER'])
     ret['TVDB_API_KEY'] = os.environ.get('TVDB_API_KEY',ret['TVDB_API_KEY'])
     ret['THEMOVIEDB_API_KEY'] = os.environ.get('THEMOVIEDB_API_KEY',ret['THEMOVIEDB_API_KEY'])
@@ -89,6 +90,8 @@ def settingsFromFile(settings_file):
                 ret['DEFAULT_BASE_PATH'] = node.attributes['value'].value
             if node.attributes['id'].value =='downloads_path':
                 ret['DOWNLOADS_PATH'] = node.attributes['value'].value
+            if node.attributes['id'].value =='incomplete_path':
+                ret['INCOMPLETE_PATH'] = node.attributes['value'].value
             if node.attributes['id'].value =='file_owner':
                 ret['FILE_OWNER'] = node.attributes['value'].value
 
@@ -154,19 +157,33 @@ def makeChownDirs(path, owner):
     res += [path]
     return res
 
-def safeCopy(source, dest, owner, retry=True):
-    orig_size = os.path.getsize(source)
-    proc_status = subprocess.run(['ffprobe', source])
+def safeCopy(source, dest, owner, retry=True, backup_src=None, file_size=0):
+    src = source
+
+    if not os.path.exists(src) or (file_size and orig_size != file_size):
+        # Try the backup file instead
+        if backup_src and os.path.exists(backup_src):
+            backup_size = os.path.getsize(backup_src)
+            if backup_size != file_size:
+                raise Exception('Bad file size for %s and %s' % (source, backup_src))
+            orig_size = backup_size
+            src = backup_src
+        else:
+            raise Exception('Bad file size for %s' % source)
+    else:
+        orig_size = os.path.getsize(src)
+
+    proc_status = subprocess.run(['ffprobe', src])
     if proc_status.returncode != 0:
-        raise Exception('Invalid video file: %s' % source)
-    shutil.copy(source, dest)
+        raise Exception('Invalid video file: %s' % src)
+    shutil.copy(src, dest)
     doChown(dest,owner)
     dest_size = os.path.getsize(dest)
     if orig_size != dest_size:
         os.unlink(dest)
         if retry:
             time.sleep(10)
-            safeCopy(source,dest,owner,retry=False)
+            safeCopy(src,dest,owner,retry=False)
         else:
             raise Exception('Failed to copy to %s - invalid destination size' % dest)
     return True            

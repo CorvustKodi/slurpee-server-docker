@@ -23,6 +23,7 @@ def processFiles(files, settings):
     allshows = ShowDB(settings['SHOWS_DB_PATH']).getShows()
 
     download_path = settings['DOWNLOADS_PATH']
+    incomplete_path = settings['INCOMPLETE_PATH']
 
     default_video_output_path = os.path.join(settings['DEFAULT_NEW_PATH'],"Video")
     default_audio_output_path = os.path.join(settings['DEFAULT_NEW_PATH'],"Audio")
@@ -34,19 +35,19 @@ def processFiles(files, settings):
     video_files = []
     audio_files = []
 
-    for file_name in files:
-        file_ext = getExtension(file_name)
-        if file_ext in video_extensions and file_name not in video_files:
-            video_files.append(file_name)
-        if file_ext in audio_extensions and file_name not in audio_files:
-            audio_files.append(file_name)
+    for f in files:
+        file_ext = getExtension(f['name'])
+        if file_ext in video_extensions and f['name'] not in [vf['name'] for vf in video_files]:
+            video_files.append(f)
+        if file_ext in audio_extensions and f['name'] not in [af['name'] for af in audio_files]:
+            audio_files.append(f)
 
     for tfile in audio_files:
         # No fancy processing for audio files, just copy to the NEW directory
         safeCopy(
-            os.path.join(download_path,tfile),
-            os.path.join(default_audio_output_path,os.path.basename(tfile)),
-            settings['FILE_OWNER']
+            os.path.join(download_path,tfile['name']),
+            os.path.join(default_audio_output_path,os.path.basename(tfile['name'])),
+            settings['FILE_OWNER'],
         )
 
     for tfile in video_files:
@@ -55,18 +56,18 @@ def processFiles(files, settings):
         for show in allshows:
             if show.enabled:
                 print('Checking %s' % show.name)
-                if parsing.fuzzyMatch(show.filename,str(tfile)) != None:
+                if parsing.fuzzyMatch(show.filename,str(tfile['name'])) != None:
                     matches.append(show)
                     foundShow = True
         if not foundShow:
-            print('No match found for vidoe file %s' % tfile)
-            print('Copying to default video directory: %s' % os.path.join(download_path,os.path.basename(tfile)))
+            print('No match found for vidoe file %s' % tfile['name'])
+            print('Copying to default video directory: %s' % os.path.join(download_path,os.path.basename(tfile['name'])))
             if safeCopy(
-                os.path.join(os.path.join(download_path,tfile)),
-                os.path.join(default_video_output_path,os.path.basename(tfile)),
+                os.path.join(os.path.join(download_path,tfile['name'])),
+                os.path.join(default_video_output_path,os.path.basename(tfile['name'])),
                 settings['FILE_OWNER']
             ) and settings['MAIL_ENABLED']:
-                sendMail(settings,'New video downloaded','%s - new file in videos' % os.path.basename(tfile))
+                sendMail(settings,'New video downloaded','%s - new file in videos' % os.path.basename(tfile['name']))
         else:
             # All of the shows in 'matching' appear in the video filename. It stands to reason
             # that the longest show name will be the best (kinda true right?)
@@ -75,7 +76,7 @@ def processFiles(files, settings):
                 if len(show.filename) > len(bestmatch.filename):
                     bestmatch = show
 
-            season, episode = parsing.parseEpisode(os.path.basename(tfile))
+            season, episode = parsing.parseEpisode(os.path.basename(tfile['name']))
             if int(season) < 10:
                 season = '0' + str(int(season))
             if int(episode) < 10:
@@ -87,13 +88,15 @@ def processFiles(files, settings):
                 makeChownDirs(dest_dir,settings['FILE_OWNER'])
 
             if os.path.exists(dest_dir):
-                target_file = bestmatch.filename + ' s' + str(season) + 'e' + str(episode) + '.' + parsing.getExtension(str(tfile))
+                target_file = bestmatch.filename + ' s' + str(season) + 'e' + str(episode) + '.' + parsing.getExtension(str(tfile['name']))
                 if not os.path.isfile(os.path.join(dest_dir,target_file)):
-                    print("Copying from %s to %s" % (os.path.join(download_path,tfile),os.path.join(dest_dir, target_file)))
+                    print("Copying from %s to %s" % (os.path.join(download_path,tfile['name']),os.path.join(dest_dir, target_file)))
                     if safeCopy(
-                        os.path.join(os.path.join(download_path,tfile)),
+                        os.path.join(os.path.join(download_path,tfile['name'])),
                         os.path.join(dest_dir,target_file),
-                        settings['FILE_OWNER']
+                        settings['FILE_OWNER'],
+                        os.path.join(os.path.join(incomplete_path,tfile['name'])),
+                        tfile['completed'] if tfile['selected'] else 0
                     ) and settings['MAIL_ENABLED']:
                         sendMail(settings,'%s - new episode available' % bestmatch.name,'A new episode of %s is available for playback in \
                           %s/Season %d: %s' % (bestmatch.name, bestmatch.path, int(season),target_file))
@@ -151,13 +154,11 @@ def mover(settings, thash = None):
     else:
         files_list = []
         if t.id in files_dict.keys():
-            for k in files_dict[t.id].keys():
-                files_list.append(files_dict[t.id][k]['name'])
+            files_list = files_dict[t.id].values()
         else:
             print('No ID match, processing all torrents')
             for t in files_dict.keys():
-                for k in files_dict[t].keys():
-                    files_list.append(files_dict[t][k]['name'])
+                files_list.extend(files_dict[t].values())
         print(files_list)
         processFiles(files_list, settings)
 
