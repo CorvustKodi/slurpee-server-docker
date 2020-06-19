@@ -160,7 +160,7 @@ def makeChownDirs(path, owner):
 def safeCopy(source, dest, owner, retry=True, backup_src=None, file_size=0):
     src = source
 
-    if not os.path.exists(src) or (file_size and orig_size != file_size):
+    if not os.path.exists(src) or (file_size and os.path.getsize(src) != file_size):
         # Try the backup file instead
         if backup_src and os.path.exists(backup_src):
             backup_size = os.path.getsize(backup_src)
