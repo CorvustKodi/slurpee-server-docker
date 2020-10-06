@@ -37,9 +37,9 @@ def processFiles(files, settings):
 
     for f in files:
         file_ext = getExtension(f['name'])
-        if file_ext in video_extensions and f['name'] not in [vf['name'] for vf in video_files]:
+        if file_ext in video_extensions and f['name'] not in [vf['name'] for vf in video_files] and f['selected']:
             video_files.append(f)
-        if file_ext in audio_extensions and f['name'] not in [af['name'] for af in audio_files]:
+        if file_ext in audio_extensions and f['name'] not in [af['name'] for af in audio_files] and f['selected']:
             audio_files.append(f)
 
     for tfile in audio_files:
@@ -48,6 +48,8 @@ def processFiles(files, settings):
             os.path.join(download_path,tfile['name']),
             os.path.join(default_audio_output_path,os.path.basename(tfile['name'])),
             settings['FILE_OWNER'],
+            backup_src=os.path.join(os.path.join(incomplete_path,tfile['name'])),
+            file_size=tfile['completed'] if tfile['selected'] else 0
         )
 
     for tfile in video_files:
@@ -66,6 +68,8 @@ def processFiles(files, settings):
                 os.path.join(os.path.join(download_path,tfile['name'])),
                 os.path.join(default_video_output_path,os.path.basename(tfile['name'])),
                 settings['FILE_OWNER']
+                backup_src=os.path.join(os.path.join(incomplete_path,tfile['name'])),
+                file_size=tfile['completed'] if tfile['selected'] else 0
             ) and settings['MAIL_ENABLED']:
                 sendMail(settings,'New video downloaded','%s - new file in videos' % os.path.basename(tfile['name']))
         else:

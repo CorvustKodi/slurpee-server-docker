@@ -7,7 +7,7 @@ class Search(BaseSearch):
 
     def search(self, terms, settings={}):
         torrents = []
-        raw_torrents = self.api.search(terms,format_='json_extended')
+        raw_torrents = self.api.search(search_string=terms,format_='json_extended')
         if raw_torrents:
             for t in raw_torrents:
 #                print(t.__dict__)
