@@ -67,7 +67,7 @@ def processFiles(files, settings):
             if safeCopy(
                 os.path.join(os.path.join(download_path,tfile['name'])),
                 os.path.join(default_video_output_path,os.path.basename(tfile['name'])),
-                settings['FILE_OWNER']
+                settings['FILE_OWNER'],
                 backup_src=os.path.join(os.path.join(incomplete_path,tfile['name'])),
                 file_size=tfile['completed'] if tfile['selected'] else 0
             ) and settings['MAIL_ENABLED']:
