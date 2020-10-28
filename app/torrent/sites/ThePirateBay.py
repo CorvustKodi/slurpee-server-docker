@@ -24,9 +24,9 @@ class Search(BaseSearch):
                 f = r.text
                 soup = BeautifulSoup(f,features="html.parser")
                 # Look for a Cloudfare redirect ? 
-                formNode = soup.findAll('form', {'id' : 'challenge-form'})[0]
-                if formNode is not None:
-                  urlpath = formNode['action']
+                formNodes = soup.findAll('form', {'id' : 'challenge-form'})
+                if formNodes:
+                  urlpath = formNodes[0]['action']
                   params = ''
                   first = True
                   for child in soup.findAll('input', {'type' : 'hidden'}):
