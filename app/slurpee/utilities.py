@@ -15,7 +15,8 @@ baseSettings = {'RPC_HOST':'127.0.0.1', 'RPC_PORT':2580, 'RPC_USER':'',
     'MAIL_ENABLED':False, 'MAIL_DEST':'', 'SMTP_HOST':'', 'SMTP_PORT':25,
     'SMTP_SECURE':False, 'SMTP_USER':'', 'SMTP_PASS':'', 'DEFAULT_NEW_PATH':'',
     'DEFAULT_BASE_PATH':'', 'DOWNLOADS_PATH':'', 'FILE_OWNER':'', 'TVDB_API_KEY':'',
-    'THEMOVIEDB_API_KEY':'', 'INCOMPLETE_PATH':'',
+    'THEMOVIEDB_API_KEY':'', 'INCOMPLETE_PATH':'', 'JACKETT_URL': 'http://localhost:9117',
+    'JACKETT_INDEXER':'all', 'JACKETT_API_KEY': ''
 }
 
 def settingsFromEnv():
@@ -55,6 +56,11 @@ def settingsFromEnv():
     ret['FILE_OWNER'] = os.environ.get('FILE_OWNER',ret['FILE_OWNER'])
     ret['TVDB_API_KEY'] = os.environ.get('TVDB_API_KEY',ret['TVDB_API_KEY'])
     ret['THEMOVIEDB_API_KEY'] = os.environ.get('THEMOVIEDB_API_KEY',ret['THEMOVIEDB_API_KEY'])
+
+    ret['JACKETT_URL'] = os.environ.get('JACKETT_URL', ret['JACKETT_URL'])
+    ret['JACKETT_INDEXER'] = os.environ.get('JACKETT_INDEXER', ret['JACKETT_INDEXER'])
+    ret['JACKETT_API_KEY'] = os.environ.get('JACKETT_API_KEY', ret['JACKETT_API_KEY'])
+
     return ret
 
 def settingsFromFile(settings_file):

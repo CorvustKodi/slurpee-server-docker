@@ -73,7 +73,7 @@ class Search(BaseSearch):
             leechers = int(td.text)
             print( "name : %s, seeds: %d, trusted: %s" % (name,seeds,trusted))
 
-            if trusted or 'trusted_uploaders' not in settings.keys() or str(settings['trusted_uploaders']).lower() != 'true':
+            if trusted or 'TRUSTEDONLY' not in settings.keys() or str(settings['TRUSTEDONLY']).lower() != 'true':
                 torrents.append({
                                  'url': url,
                                  'name': name,

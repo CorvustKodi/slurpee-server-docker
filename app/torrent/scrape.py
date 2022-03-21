@@ -25,15 +25,15 @@ def lookForTarget(settings, targetName):
             class_ = getattr(module, 'Search')
             print('Calling engine %s' % SEARCHER)
             engine = class_()
-            results = engine.search(urllib.parse.quote(targetName),{'trusted_uploaders':settings['TRUSTEDONLY']})
+            results = engine.search(urllib.parse.quote(targetName),settings)
             sanitizedTarget = parsing.sanitizeString(targetName)
             if len(results) == 0 and sanitizedTarget != targetName:
-                results = engine.search(urllib.parse.quote(sanitizedTarget),{'trusted_uploaders':settings['TRUSTEDONLY']})
+                results = engine.search(urllib.parse.quote(sanitizedTarget),settings)
             if len(results) > 0:
                 maxMatches = 10
                 for res in results:
                     if maxMatches <= 0:
-                        break;
+                        break
                     if parsing.fuzzyMatch(targetName,res) and res['seeds'] > 0:
                         bestResults.append(res)
                         maxMatches = maxMatches - 1

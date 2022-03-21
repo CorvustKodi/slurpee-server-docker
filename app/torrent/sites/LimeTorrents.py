@@ -95,7 +95,7 @@ class Search(BaseSearch):
                     for mag in newSoup.findAll('a'):
                         if mag['href'].startswith('magnet:?'):
                             url = mag['href']
-                    if trusted or 'trusted_uploaders' not in settings.keys() or str(settings['trusted_uploaders']).lower() != 'true':
+                    if trusted or 'TRUSTEDONLY' not in settings.keys() or str(settings['TRUSTEDONLY']).lower() != 'true':
                         torrents.append({
                                  'url': url,
                                  'name': name,
