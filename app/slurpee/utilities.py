@@ -176,8 +176,12 @@ def safeCopy(source, dest, owner, retry=True, backup_src=None, file_size=0):
     proc_status = subprocess.run(['ffprobe', src])
     if proc_status.returncode != 0:
         raise Exception('Invalid video file: %s' % src)
-    shutil.copy(src, dest)
-    doChown(dest,owner)
+    dest_size = 0
+    try:
+        shutil.copy(src, dest)
+        doChown(dest,owner)
+    except Exception as e:
+        print('File copy exception for %s: %s' % (e, src))
     dest_size = os.path.getsize(dest)
     if orig_size != dest_size:
         os.unlink(dest)
@@ -185,7 +189,7 @@ def safeCopy(source, dest, owner, retry=True, backup_src=None, file_size=0):
             time.sleep(10)
             safeCopy(src,dest,owner,retry=False)
         else:
-            raise Exception('Failed to copy to %s - invalid destination size' % dest)
+            raise Exception('Failed to copy to %s - invalid destination size (%s != %s)' % (dest, orig_size, dest_size))
     return True            
     
 class TVDBSearch(object):
@@ -310,7 +314,6 @@ class TMDBSearch(object):
             search_url = self.baseURL + "/tv/" + str(showID) + "/season/" + str(seasonNumber) + '?api_key=' + self.apiKey + '&language=' + self.lang
             tvdb = requests.get(search_url)
             seasonJ = tvdb.json()
-            print(seasonJ)
             for episode in seasonJ['episodes']:
                 num = episode['episode_number']
                 date = episode['air_date']

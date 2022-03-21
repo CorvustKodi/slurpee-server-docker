@@ -10,7 +10,6 @@ class Search(BaseSearch):
         raw_torrents = self.api.search(search_string=terms,format_='json_extended')
         if raw_torrents:
             for t in raw_torrents:
-#                print(t.__dict__)
                 torrents.append({'url':t.download,
                                  'name':t.filename,
                                  'seeds':t._raw['seeders'],

@@ -163,7 +163,6 @@ def mover(settings, thash = None):
             print('No ID match, processing all torrents')
             for t in files_dict.keys():
                 files_list.extend(files_dict[t].values())
-        print(files_list)
         processFiles(files_list, settings)
 
 def cleanup(settings):
@@ -171,8 +170,6 @@ def cleanup(settings):
         tc = transmissionrpc.Client(settings['RPC_HOST'], port=settings['RPC_PORT'], user=settings['RPC_USER'], password=settings['RPC_PASS'])
         torrent_list = tc.get_torrents()
         now = time.time()
-        oneDay = 60*60*24
-        oneWeek = oneDay*7
         for t in torrent_list:
             doneDate = t.date_done
             startDate = t.date_started
